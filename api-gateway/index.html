@@ -1,0 +1,827 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BookStore</title>
+  <style>
+    :root {
+      --bg: #f7f2e8;
+      --surface: #fffdf8;
+      --ink: #1f1a14;
+      --muted: #6d6254;
+      --line: #ddd2c2;
+      --primary: #0f766e;
+      --primary-strong: #115e59;
+      --danger: #b91c1c;
+      --ok: #166534;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(145deg, #f7f2e8, #f2e9da 50%, #edf4ef);
+      color: var(--ink);
+    }
+    .container { max-width: 1180px; margin: 0 auto; padding: 18px; }
+    .header {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 14px;
+      box-shadow: 0 8px 22px rgba(40, 30, 20, 0.08);
+    }
+    .brand { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .brand h1 { margin: 0; font-size: 28px; }
+    .brand p { margin: 4px 0 0; color: var(--muted); }
+    .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+    .chip { padding: 5px 10px; border-radius: 999px; background: #efe6d8; color: #4f473d; font-size: 12px; }
+    .nav { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+    .nav a {
+      text-decoration: none;
+      color: #40382f;
+      border: 1px solid var(--line);
+      background: #faf6ef;
+      border-radius: 999px;
+      padding: 7px 12px;
+      font-size: 13px;
+    }
+    .nav a:hover { background: #efe7da; }
+
+    .panel {
+      margin-top: 14px;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 14px;
+      box-shadow: 0 6px 18px rgba(40, 30, 20, 0.05);
+    }
+    .grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); }
+    .book-card {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 12px;
+      background: #fff;
+    }
+    .book-title { margin: 0 0 4px; font-size: 17px; }
+    .book-meta { margin: 0; color: var(--muted); font-size: 13px; }
+
+    h2 { margin: 0 0 10px; font-size: 20px; }
+    h3 { margin: 0 0 8px; font-size: 16px; }
+
+    .row { display: grid; gap: 10px; grid-template-columns: 1fr 1fr; }
+    label { display: block; margin: 8px 0 4px; color: var(--muted); font-size: 13px; }
+    input, select, button {
+      width: 100%;
+      border-radius: 9px;
+      border: 1px solid var(--line);
+      padding: 9px 10px;
+      font-size: 14px;
+      background: #fff;
+    }
+    button {
+      border: none;
+      color: #fff;
+      background: var(--primary);
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 8px;
+    }
+    button:hover { background: var(--primary-strong); }
+    .btn-danger { background: var(--danger); }
+
+    .list { border: 1px solid var(--line); border-radius: 10px; overflow: auto; }
+    .cart-row {
+      display: grid;
+      grid-template-columns: 40px 1.4fr 100px 90px 100px;
+      gap: 8px;
+      align-items: center;
+      padding: 10px;
+      border-bottom: 1px dashed var(--line);
+      font-size: 14px;
+      background: #fff;
+    }
+    .cart-row:last-child { border-bottom: none; }
+
+    .muted { color: var(--muted); font-size: 13px; }
+    .hidden { display: none !important; }
+
+    #toast {
+      position: fixed;
+      top: 14px;
+      right: 14px;
+      z-index: 1000;
+      min-width: 220px;
+      max-width: 420px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      color: #fff;
+      display: none;
+      box-shadow: 0 8px 18px rgba(0, 0, 0, 0.22);
+    }
+    #toast.ok { background: var(--ok); }
+    #toast.err { background: var(--danger); }
+
+    @media (max-width: 800px) {
+      .row { grid-template-columns: 1fr; }
+      .cart-row {
+        grid-template-columns: 32px 1fr;
+        gap: 6px;
+      }
+      .cart-row > div:nth-child(n+3) { font-size: 13px; color: var(--muted); }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <div class="brand">
+        <div>
+          <h1>BookStore</h1>
+          <p>Browse books, add to cart, checkout as order.</p>
+        </div>
+        <div class="chips" id="sessionChips"></div>
+      </div>
+      <nav class="nav">
+        <a href="/" onclick="go(event, '/')">Home</a>
+        <a href="/books" onclick="go(event, '/books')">Books</a>
+        <a href="/cart" onclick="go(event, '/cart')">Cart</a>
+        <a href="/order" onclick="go(event, '/order')">Checkout</a>
+        <a href="/ratings" onclick="go(event, '/ratings')">Ratings</a>
+        <a href="/login" onclick="go(event, '/login')">Login</a>
+        <a href="/register" onclick="go(event, '/register')">Register</a>
+        <a href="/staff-books" onclick="go(event, '/staff-books')">Staff</a>
+      </nav>
+    </header>
+
+    <section id="loginPage" class="panel hidden">
+      <h2>Login</h2>
+      <div class="row">
+        <div>
+          <label>Email</label>
+          <input id="loginEmail" placeholder="example@mail.com">
+        </div>
+        <div>
+          <label>Password</label>
+          <input id="loginPass" type="password" value="123456">
+        </div>
+      </div>
+      <button onclick="loginUser()">Login</button>
+    </section>
+
+    <section id="registerPage" class="panel hidden">
+      <h2>Register</h2>
+      <p class="muted">New users are always registered as CUSTOMER.</p>
+      <div class="row">
+        <div>
+          <label>Name</label>
+          <input id="regName" value="Nguyen Van A">
+        </div>
+        <div>
+          <label>Email</label>
+          <input id="regEmail" placeholder="example@mail.com">
+        </div>
+      </div>
+      <label>Password</label>
+      <input id="regPass" type="password" value="123456">
+      <button onclick="registerUser()">Create Account</button>
+    </section>
+
+    <section id="booksPage" class="panel hidden">
+      <h2>Books</h2>
+      <div id="bookGrid" class="grid"></div>
+    </section>
+
+    <section id="bookDetailPage" class="panel hidden">
+      <h2>Book Detail</h2>
+      <div id="bookDetailWrap"></div>
+    </section>
+
+    <section id="cartPage" class="panel hidden">
+      <h2>Your Cart</h2>
+      <p class="muted">Choose books to checkout. Order total is calculated automatically.</p>
+      <div id="cartWrap" class="list"></div>
+      <div class="row" style="margin-top:10px; align-items:end;">
+        <div>
+          <label>Pay Method</label>
+          <select id="orderPay"><option>COD</option><option>CARD</option><option>BANK</option></select>
+        </div>
+        <div>
+          <label>Ship Method</label>
+          <select id="orderShip"><option>FAST</option><option>STANDARD</option><option>EXPRESS</option></select>
+        </div>
+      </div>
+      <div class="chips" style="margin-top:10px;">
+        <span class="chip">Selected Total: <b id="selectedTotal">0.00</b></span>
+      </div>
+      <button onclick="checkoutSelected()">Checkout Selected (Create Order)</button>
+    </section>
+
+    <section id="ratingsPage" class="panel hidden">
+      <h2>Ratings</h2>
+      <div class="row">
+        <div>
+          <label>Book ID</label>
+          <input id="rateBookId" type="number" placeholder="book id">
+        </div>
+        <div>
+          <label>Score (1-5)</label>
+          <input id="rateScore" type="number" min="1" max="5" value="5">
+        </div>
+      </div>
+      <label>Comment</label>
+      <input id="rateComment" value="Great book">
+      <button onclick="rateBook()">Submit Rating</button>
+      <button onclick="loadRatings()">Refresh Ratings</button>
+      <div id="ratingList" class="list" style="margin-top:10px"></div>
+    </section>
+
+    <section id="staffPage" class="panel hidden">
+      <h2>Staff - Manage Books</h2>
+      <div class="row">
+        <div>
+          <label>Title</label><input id="staffTitle" value="Domain Driven Design">
+        </div>
+        <div>
+          <label>Author</label><input id="staffAuthor" value="Eric Evans">
+        </div>
+      </div>
+      <div class="row">
+        <div><label>Price</label><input id="staffPrice" value="22.00"></div>
+        <div><label>Stock</label><input id="staffStock" type="number" value="18"></div>
+      </div>
+      <button onclick="staffCreateBook()">Create Book</button>
+      <div class="row">
+        <div><label>Book ID</label><input id="staffBookId" type="number"></div>
+        <div><label>New Stock</label><input id="staffNewStock" type="number" value="12"></div>
+      </div>
+      <button onclick="staffUpdateBook()">Update Stock</button>
+      <button class="btn-danger" onclick="staffDeleteBook()">Delete Book</button>
+    </section>
+
+    <section id="orderPage" class="panel hidden">
+      <h2>Your Orders</h2>
+      <p class="muted">Orders created from checked out cart items.</p>
+      <div id="orderList" class="list" style="margin-top:10px"></div>
+      <button onclick="go(event, '/cart')">Go To Cart</button>
+      <button class="btn-danger" onclick="logout()" style="max-width:220px">Logout</button>
+    </section>
+
+    <section id="orderDetailPage" class="panel hidden">
+      <h2>Order Detail</h2>
+      <div id="orderDetailWrap"></div>
+      <button onclick="go(event, '/order')">Back To Orders</button>
+    </section>
+
+    <div id="toast"></div>
+  </div>
+
+<script>
+  const state = {
+    token: localStorage.getItem("demo_token") || null,
+    user: JSON.parse(localStorage.getItem("demo_user") || "null"),
+    cartId: null,
+    books: [],
+    cartItems: [],
+    orders: [],
+    orderDetail: null,
+    selectedItemIds: new Set(),
+  };
+
+  const pages = [
+    "loginPage", "registerPage", "booksPage", "bookDetailPage",
+    "cartPage", "ratingsPage", "staffPage", "orderPage", "orderDetailPage"
+  ];
+
+  function notify(message, ok = true) {
+    const t = document.getElementById("toast");
+    t.className = ok ? "ok" : "err";
+    t.textContent = message;
+    t.style.display = "block";
+    clearTimeout(notify.timer);
+    notify.timer = setTimeout(() => (t.style.display = "none"), 2500);
+  }
+
+  async function api(url, method = "GET", body = null) {
+    const opt = { method, headers: { "Content-Type": "application/json" } };
+    if (body) opt.body = JSON.stringify(body);
+    const res = await fetch(url, opt);
+    const txt = await res.text();
+    let data = {};
+    try { data = txt ? JSON.parse(txt) : {}; } catch { data = txt; }
+    if (!res.ok) throw new Error(`${res.status}`);
+    return data;
+  }
+
+  function go(event, path) {
+    if (event) event.preventDefault();
+    history.pushState({}, "", path);
+    renderRoute();
+  }
+
+  function hideAllPages() {
+    pages.forEach((id) => document.getElementById(id).classList.add("hidden"));
+  }
+
+  function isBookDetailPath(path) {
+    return /^\/book-\d+$/.test(path);
+  }
+
+  function isOrderDetailPath(path) {
+    return /^\/order-\d+$/.test(path);
+  }
+
+  function getBookIdFromPath(path) {
+    const m = path.match(/^\/book-(\d+)$/);
+    return m ? Number(m[1]) : null;
+  }
+
+  function getOrderIdFromPath(path) {
+    const m = path.match(/^\/order-(\d+)$/);
+    return m ? Number(m[1]) : null;
+  }
+
+  function updateSessionChips() {
+    const c = document.getElementById("sessionChips");
+    if (!state.user) {
+      c.innerHTML = '<span class="chip">Guest</span>';
+      return;
+    }
+    c.innerHTML = `
+      <span class="chip">${state.user.name}</span>
+      <span class="chip">${state.user.role}</span>
+      <span class="chip">Cart: ${state.cartId ?? '-'}</span>
+    `;
+  }
+
+  async function ensureBooks() {
+    state.books = await api("/book/books/");
+  }
+
+  async function ensureCartMeta() {
+    if (!state.user || state.user.role !== "CUSTOMER") return;
+    try {
+      const cart = await api(`/cart/carts/customer/${state.user.id}/`);
+      state.cartId = cart.id;
+    } catch {
+      state.cartId = null;
+    }
+  }
+
+  function renderBooks() {
+    const wrap = document.getElementById("bookGrid");
+    if (!state.books.length) {
+      wrap.innerHTML = '<div class="book-card"><p class="muted">No books available.</p></div>';
+      return;
+    }
+
+    wrap.innerHTML = state.books.map((b) => `
+      <article class="book-card">
+        <h3 class="book-title">${b.title}</h3>
+        <p class="book-meta">Author: ${b.author}</p>
+        <p class="book-meta">Price: ${b.price}</p>
+        <p class="book-meta">Stock: ${b.stock}</p>
+        <div class="row" style="margin-top:6px;">
+          <div>
+            <label>Quantity</label>
+            <input id="qty-${b.id}" type="number" min="1" value="1">
+          </div>
+          <div style="display:flex;align-items:end;">
+            <button onclick="addBookToCart(${b.id})">Add To Cart</button>
+          </div>
+        </div>
+        <button onclick="go(event, '/book-${b.id}')">View Detail</button>
+      </article>
+    `).join("");
+  }
+
+  function renderBookDetail(bookId) {
+    const b = state.books.find((x) => x.id === bookId);
+    const wrap = document.getElementById("bookDetailWrap");
+    if (!b) {
+      wrap.innerHTML = '<p class="muted">Book not found.</p>';
+      return;
+    }
+    wrap.innerHTML = `
+      <h3>${b.title}</h3>
+      <p class="muted">Author: ${b.author}</p>
+      <p class="muted">Price: ${b.price}</p>
+      <p class="muted">Stock: ${b.stock}</p>
+      <div class="row">
+        <div>
+          <label>Quantity</label>
+          <input id="detailQty" type="number" min="1" value="1">
+        </div>
+        <div style="display:flex;align-items:end;">
+          <button onclick="addBookToCart(${b.id}, 'detailQty')">Add To Cart</button>
+        </div>
+      </div>
+      <button onclick="go(event, '/books')">Back To Books</button>
+    `;
+  }
+
+  function renderOrderDetail() {
+    const wrap = document.getElementById("orderDetailWrap");
+    const o = state.orderDetail;
+    if (!o) {
+      wrap.innerHTML = '<p class="muted">Order not found.</p>';
+      return;
+    }
+
+    const items = o.items || [];
+    wrap.innerHTML = `
+      <p><b>Order #${o.id}</b></p>
+      <p class="muted">Status: ${o.status}</p>
+      <p class="muted">Pay/Ship: ${o.pay_method} / ${o.ship_method}</p>
+      <p class="muted">Total: ${o.total_amount}</p>
+      <div class="list" style="margin-top:10px;">
+        ${items.length ? items.map((it) => `
+          <div class="cart-row" style="grid-template-columns: 1.5fr 100px 90px 100px;">
+            <div><b>${it.title || ('Book #' + it.book_id)}</b><br><span class="muted">Book ID: ${it.book_id}</span></div>
+            <div>Price: ${it.unit_price}</div>
+            <div>Qty: ${it.quantity}</div>
+            <div>Sub: ${it.subtotal}</div>
+          </div>
+        `).join('') : '<div class="cart-row"><div class="muted">No item detail.</div></div>'}
+      </div>
+    `;
+  }
+
+  async function addBookToCart(bookId, qtyInputId = null) {
+    try {
+      if (!state.user || state.user.role !== "CUSTOMER") {
+        notify("Please login as CUSTOMER first.", false);
+        return;
+      }
+      if (!state.cartId) {
+        await ensureCartMeta();
+        if (!state.cartId) throw new Error("no-cart");
+      }
+      const inputId = qtyInputId || `qty-${bookId}`;
+      const qty = Number(document.getElementById(inputId).value || 1);
+      await api("/cart/cart-items/", "POST", {
+        cart: state.cartId,
+        book_id: bookId,
+        quantity: qty,
+      });
+      notify("Added to cart.");
+    } catch {
+      notify("Cannot add to cart.", false);
+    }
+  }
+
+  async function loadCart() {
+    if (!state.user || state.user.role !== "CUSTOMER") return;
+    const items = await api(`/cart/carts/${state.user.id}/`);
+    state.cartItems = items;
+    if (!state.selectedItemIds.size) {
+      items.forEach((i) => state.selectedItemIds.add(i.id));
+    }
+    renderCart();
+  }
+
+  function calcSelectedTotal() {
+    let total = 0;
+    state.cartItems.forEach((i) => {
+      if (!state.selectedItemIds.has(i.id)) return;
+      const b = state.books.find((x) => x.id === i.book_id);
+      const price = b ? Number(b.price) : 0;
+      total += price * Number(i.quantity);
+    });
+    return total;
+  }
+
+  function renderCart() {
+    const wrap = document.getElementById("cartWrap");
+    if (!state.cartItems.length) {
+      wrap.innerHTML = '<div class="cart-row"><div class="muted">Cart is empty.</div></div>';
+      document.getElementById("selectedTotal").textContent = "0.00";
+      return;
+    }
+
+    wrap.innerHTML = state.cartItems.map((i) => {
+      const b = state.books.find((x) => x.id === i.book_id);
+      const price = b ? Number(b.price) : 0;
+      const subtotal = price * Number(i.quantity);
+      const checked = state.selectedItemIds.has(i.id) ? "checked" : "";
+      return `
+        <div class="cart-row">
+          <input type="checkbox" ${checked} onchange="toggleItem(${i.id}, this.checked)">
+          <div>
+            <div><b>${b ? b.title : `Book #${i.book_id}`}</b></div>
+            <div class="muted">Qty: ${i.quantity}</div>
+          </div>
+          <div>Price: ${price.toFixed(2)}</div>
+          <div>Sub: ${subtotal.toFixed(2)}</div>
+          <div>
+            <input id="u-${i.id}" type="number" min="1" value="${i.quantity}">
+            <button onclick="updateCartItem(${i.id})">Update</button>
+          </div>
+        </div>
+      `;
+    }).join("");
+
+    document.getElementById("selectedTotal").textContent = calcSelectedTotal().toFixed(2);
+  }
+
+  function toggleItem(itemId, checked) {
+    if (checked) state.selectedItemIds.add(itemId);
+    else state.selectedItemIds.delete(itemId);
+    document.getElementById("selectedTotal").textContent = calcSelectedTotal().toFixed(2);
+  }
+
+  async function updateCartItem(itemId) {
+    try {
+      const q = Number(document.getElementById(`u-${itemId}`).value || 1);
+      await api(`/cart/cart-items/${itemId}/`, "PATCH", { quantity: q });
+      await loadCart();
+      notify("Cart updated.");
+    } catch {
+      notify("Cannot update cart item.", false);
+    }
+  }
+
+  async function checkoutSelected() {
+    try {
+      if (!state.user || state.user.role !== "CUSTOMER") {
+        notify("Only CUSTOMER can checkout.", false);
+        return;
+      }
+      const total = calcSelectedTotal();
+      if (total <= 0) {
+        notify("Please select at least one cart item.", false);
+        return;
+      }
+      const selectedIds = Array.from(state.selectedItemIds);
+      const selectedItems = state.cartItems
+        .filter((x) => state.selectedItemIds.has(x.id))
+        .map((x) => {
+          const b = state.books.find((bk) => bk.id === x.book_id);
+          const unitPrice = b ? Number(b.price) : 0;
+          return {
+            cart_item_id: x.id,
+            book_id: x.book_id,
+            title: b ? b.title : `Book #${x.book_id}`,
+            unit_price: unitPrice.toFixed(2),
+            quantity: Number(x.quantity),
+            subtotal: (unitPrice * Number(x.quantity)).toFixed(2),
+          };
+        });
+
+      await api("/order/orders/", "POST", {
+        customer_id: state.user.id,
+        total_amount: total.toFixed(2),
+        pay_method: document.getElementById("orderPay").value,
+        ship_method: document.getElementById("orderShip").value,
+        order_items: selectedItems,
+      });
+
+      for (const itemId of selectedIds) {
+        await api(`/cart/cart-items/${itemId}/`, "DELETE");
+      }
+
+      state.selectedItemIds.clear();
+      await loadCart();
+      await loadOrders();
+      notify("Order created successfully.");
+      go(null, "/order");
+    } catch {
+      notify("Checkout failed.", false);
+    }
+  }
+
+  async function loadOrders() {
+    if (!state.user || state.user.role !== "CUSTOMER") return;
+    const orders = await api(`/order/orders/?customer_id=${state.user.id}`);
+    state.orders = orders;
+    const wrap = document.getElementById("orderList");
+    wrap.innerHTML = orders.length
+      ? orders.map((o) => `
+          <div class="cart-row" style="grid-template-columns: 1fr 120px 140px 190px;">
+            <div><b><a href="/order-${o.id}" onclick="go(event, '/order-${o.id}')">Order #${o.id}</a></b><br><span class="muted">Customer: ${o.customer_id}</span></div>
+            <div>Total: ${o.total_amount}</div>
+            <div>${o.pay_method} / ${o.ship_method}</div>
+            <div>Status: ${o.status}</div>
+          </div>
+        `).join("")
+      : '<div class="cart-row"><div class="muted">No orders yet.</div></div>';
+  }
+
+  async function loadOrderDetail(orderId) {
+    const detail = await api(`/order/orders/${orderId}/`);
+    state.orderDetail = detail;
+    renderOrderDetail();
+  }
+
+  async function loadRatings() {
+    const ratings = await api("/rating/ratings/");
+    const wrap = document.getElementById("ratingList");
+    wrap.innerHTML = ratings.length
+      ? ratings.map((r) => `<div class="cart-row"><div><b>Book #${r.book_id}</b></div><div>Score: ${r.score}</div><div>${r.comment || ''}</div></div>`).join("")
+      : '<div class="cart-row"><div class="muted">No ratings yet.</div></div>';
+  }
+
+  async function rateBook() {
+    try {
+      await api("/rating/ratings/", "POST", {
+        customer_id: state.user.id,
+        book_id: Number(document.getElementById("rateBookId").value),
+        score: Number(document.getElementById("rateScore").value),
+        comment: document.getElementById("rateComment").value,
+      });
+      notify("Rating submitted.");
+      await loadRatings();
+    } catch {
+      notify("Rating failed.", false);
+    }
+  }
+
+  async function staffCreateBook() {
+    try {
+      await api("/staff/staff/books/", "POST", {
+        book: {
+          title: document.getElementById("staffTitle").value,
+          author: document.getElementById("staffAuthor").value,
+          price: document.getElementById("staffPrice").value,
+          stock: Number(document.getElementById("staffStock").value),
+        },
+        note: "Created from UI",
+      });
+      await ensureBooks();
+      renderBooks();
+      notify("Book created.");
+    } catch {
+      notify("Create book failed.", false);
+    }
+  }
+
+  async function staffUpdateBook() {
+    try {
+      const bookId = Number(document.getElementById("staffBookId").value);
+      const stock = Number(document.getElementById("staffNewStock").value);
+      await api(`/staff/staff/books/${bookId}/`, "PATCH", { stock });
+      await ensureBooks();
+      renderBooks();
+      notify("Book updated.");
+    } catch {
+      notify("Update book failed.", false);
+    }
+  }
+
+  async function staffDeleteBook() {
+    try {
+      const bookId = Number(document.getElementById("staffBookId").value);
+      await api(`/staff/staff/books/${bookId}/`, "DELETE");
+      await ensureBooks();
+      renderBooks();
+      notify("Book deleted.");
+    } catch {
+      notify("Delete book failed.", false);
+    }
+  }
+
+  async function registerUser() {
+    try {
+      const email = document.getElementById("regEmail").value.trim() || `user_${Date.now()}@example.com`;
+      await api("/customer/auth/register/", "POST", {
+        name: document.getElementById("regName").value,
+        email,
+        password: document.getElementById("regPass").value,
+      });
+      notify("Register successful. Please login.");
+      document.getElementById("loginEmail").value = email;
+      document.getElementById("loginPass").value = document.getElementById("regPass").value;
+      go(null, "/login");
+    } catch {
+      notify("Register failed.", false);
+    }
+  }
+
+  async function loginUser() {
+    try {
+      const resp = await api("/customer/auth/login/", "POST", {
+        email: document.getElementById("loginEmail").value,
+        password: document.getElementById("loginPass").value,
+      });
+      state.token = resp.token;
+      state.user = resp.user;
+      localStorage.setItem("demo_token", state.token);
+      localStorage.setItem("demo_user", JSON.stringify(state.user));
+      await ensureCartMeta();
+      updateSessionChips();
+      notify(`Welcome ${state.user.name}`);
+      go(null, "/books");
+    } catch {
+      notify("Login failed.", false);
+    }
+  }
+
+  function logout() {
+    state.token = null;
+    state.user = null;
+    state.cartId = null;
+    state.selectedItemIds.clear();
+    localStorage.removeItem("demo_token");
+    localStorage.removeItem("demo_user");
+    updateSessionChips();
+    go(null, "/login");
+  }
+
+  async function renderRoute() {
+    const path = window.location.pathname;
+    hideAllPages();
+    updateSessionChips();
+
+    if (!state.books.length) {
+      await ensureBooks();
+    }
+
+    if (path === "/" || path === "/books") {
+      document.getElementById("booksPage").classList.remove("hidden");
+      renderBooks();
+      return;
+    }
+
+    if (isBookDetailPath(path)) {
+      document.getElementById("bookDetailPage").classList.remove("hidden");
+      renderBookDetail(getBookIdFromPath(path));
+      return;
+    }
+
+    if (isOrderDetailPath(path)) {
+      if (!state.user || state.user.role !== "CUSTOMER") {
+        notify("Please login as CUSTOMER.", false);
+        go(null, "/login");
+        return;
+      }
+      await loadOrderDetail(getOrderIdFromPath(path));
+      document.getElementById("orderDetailPage").classList.remove("hidden");
+      return;
+    }
+
+    if (path === "/login") {
+      document.getElementById("loginPage").classList.remove("hidden");
+      return;
+    }
+
+    if (path === "/register") {
+      document.getElementById("registerPage").classList.remove("hidden");
+      return;
+    }
+
+    if (path === "/cart") {
+      if (!state.user || state.user.role !== "CUSTOMER") {
+        notify("Please login as CUSTOMER.", false);
+        go(null, "/login");
+        return;
+      }
+      await ensureCartMeta();
+      await loadCart();
+      document.getElementById("cartPage").classList.remove("hidden");
+      return;
+    }
+
+    if (path === "/order") {
+      if (!state.user || state.user.role !== "CUSTOMER") {
+        notify("Please login as CUSTOMER.", false);
+        go(null, "/login");
+        return;
+      }
+      await loadOrders();
+      document.getElementById("orderPage").classList.remove("hidden");
+      return;
+    }
+
+    if (path === "/ratings") {
+      if (!state.user || state.user.role !== "CUSTOMER") {
+        notify("Please login as CUSTOMER.", false);
+        go(null, "/login");
+        return;
+      }
+      await loadRatings();
+      document.getElementById("ratingsPage").classList.remove("hidden");
+      return;
+    }
+
+    if (path === "/staff-books") {
+      if (!state.user || state.user.role !== "STAFF") {
+        notify("Only STAFF can access this page.", false);
+        go(null, "/login");
+        return;
+      }
+      document.getElementById("staffPage").classList.remove("hidden");
+      return;
+    }
+
+    go(null, "/");
+  }
+
+  async function bootstrap() {
+    window.addEventListener("popstate", renderRoute);
+    await renderRoute();
+  }
+
+  bootstrap();
+</script>
+</body>
+</html>

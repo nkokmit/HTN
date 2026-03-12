@@ -1,0 +1,303 @@
+services:
+  api-gateway:
+    build: ./api-gateway
+    container_name: api-gateway
+    ports:
+      - "8080:80"
+    depends_on:
+      - book-service
+      - customer-service
+      - cart-service
+      - staff-service
+      - manager-service
+      - catalog-service
+      - order-service
+      - ship-service
+      - pay-service
+      - comment-rate-service
+      - recommender-ai-service
+
+  book-service:
+    build: ./book-service
+    container_name: book-service
+    environment:
+      POSTGRES_DB: book_db
+      POSTGRES_USER: book_user
+      POSTGRES_PASSWORD: book_pass
+      POSTGRES_HOST: book-db
+      POSTGRES_PORT: 5432
+    depends_on:
+      - book-db
+    ports:
+      - "8001:8000"
+
+  book-db:
+    image: postgres:16-alpine
+    container_name: book-db
+    environment:
+      POSTGRES_DB: book_db
+      POSTGRES_USER: book_user
+      POSTGRES_PASSWORD: book_pass
+    volumes:
+      - book_db_data:/var/lib/postgresql/data
+
+  customer-service:
+    build: ./customer-service
+    container_name: customer-service
+    environment:
+      POSTGRES_DB: customer_db
+      POSTGRES_USER: customer_user
+      POSTGRES_PASSWORD: customer_pass
+      POSTGRES_HOST: customer-db
+      POSTGRES_PORT: 5432
+    depends_on:
+      - customer-db
+      - cart-service
+    ports:
+      - "8002:8000"
+
+  customer-db:
+    image: postgres:16-alpine
+    container_name: customer-db
+    environment:
+      POSTGRES_DB: customer_db
+      POSTGRES_USER: customer_user
+      POSTGRES_PASSWORD: customer_pass
+    volumes:
+      - customer_db_data:/var/lib/postgresql/data
+
+  cart-service:
+    build: ./cart-service
+    container_name: cart-service
+    environment:
+      POSTGRES_DB: cart_db
+      POSTGRES_USER: cart_user
+      POSTGRES_PASSWORD: cart_pass
+      POSTGRES_HOST: cart-db
+      POSTGRES_PORT: 5432
+    depends_on:
+      - cart-db
+      - book-service
+    ports:
+      - "8003:8000"
+
+  cart-db:
+    image: postgres:16-alpine
+    container_name: cart-db
+    environment:
+      POSTGRES_DB: cart_db
+      POSTGRES_USER: cart_user
+      POSTGRES_PASSWORD: cart_pass
+    volumes:
+      - cart_db_data:/var/lib/postgresql/data
+
+  staff-service:
+    build: ./staff-service
+    container_name: staff-service
+    environment:
+      POSTGRES_DB: staff_db
+      POSTGRES_USER: staff_user
+      POSTGRES_PASSWORD: staff_pass
+      POSTGRES_HOST: staff-db
+      POSTGRES_PORT: 5432
+    depends_on:
+      - staff-db
+      - book-service
+    ports:
+      - "8004:8000"
+
+  staff-db:
+    image: postgres:16-alpine
+    container_name: staff-db
+    environment:
+      POSTGRES_DB: staff_db
+      POSTGRES_USER: staff_user
+      POSTGRES_PASSWORD: staff_pass
+    volumes:
+      - staff_db_data:/var/lib/postgresql/data
+
+  manager-service:
+    build: ./manager-service
+    container_name: manager-service
+    environment:
+      POSTGRES_DB: manager_db
+      POSTGRES_USER: manager_user
+      POSTGRES_PASSWORD: manager_pass
+      POSTGRES_HOST: manager-db
+      POSTGRES_PORT: 5432
+    depends_on:
+      - manager-db
+    ports:
+      - "8005:8000"
+
+  manager-db:
+    image: postgres:16-alpine
+    container_name: manager-db
+    environment:
+      POSTGRES_DB: manager_db
+      POSTGRES_USER: manager_user
+      POSTGRES_PASSWORD: manager_pass
+    volumes:
+      - manager_db_data:/var/lib/postgresql/data
+
+  catalog-service:
+    build: ./catalog-service
+    container_name: catalog-service
+    environment:
+      POSTGRES_DB: catalog_db
+      POSTGRES_USER: catalog_user
+      POSTGRES_PASSWORD: catalog_pass
+      POSTGRES_HOST: catalog-db
+      POSTGRES_PORT: 5432
+    depends_on:
+      - catalog-db
+      - book-service
+    ports:
+      - "8006:8000"
+
+  catalog-db:
+    image: postgres:16-alpine
+    container_name: catalog-db
+    environment:
+      POSTGRES_DB: catalog_db
+      POSTGRES_USER: catalog_user
+      POSTGRES_PASSWORD: catalog_pass
+    volumes:
+      - catalog_db_data:/var/lib/postgresql/data
+
+  order-service:
+    build: ./order-service
+    container_name: order-service
+    environment:
+      POSTGRES_DB: order_db
+      POSTGRES_USER: order_user
+      POSTGRES_PASSWORD: order_pass
+      POSTGRES_HOST: order-db
+      POSTGRES_PORT: 5432
+    depends_on:
+      - order-db
+      - pay-service
+      - ship-service
+    ports:
+      - "8007:8000"
+
+  order-db:
+    image: postgres:16-alpine
+    container_name: order-db
+    environment:
+      POSTGRES_DB: order_db
+      POSTGRES_USER: order_user
+      POSTGRES_PASSWORD: order_pass
+    volumes:
+      - order_db_data:/var/lib/postgresql/data
+
+  ship-service:
+    build: ./ship-service
+    container_name: ship-service
+    environment:
+      POSTGRES_DB: ship_db
+      POSTGRES_USER: ship_user
+      POSTGRES_PASSWORD: ship_pass
+      POSTGRES_HOST: ship-db
+      POSTGRES_PORT: 5432
+    depends_on:
+      - ship-db
+    ports:
+      - "8008:8000"
+
+  ship-db:
+    image: postgres:16-alpine
+    container_name: ship-db
+    environment:
+      POSTGRES_DB: ship_db
+      POSTGRES_USER: ship_user
+      POSTGRES_PASSWORD: ship_pass
+    volumes:
+      - ship_db_data:/var/lib/postgresql/data
+
+  pay-service:
+    build: ./pay-service
+    container_name: pay-service
+    environment:
+      POSTGRES_DB: pay_db
+      POSTGRES_USER: pay_user
+      POSTGRES_PASSWORD: pay_pass
+      POSTGRES_HOST: pay-db
+      POSTGRES_PORT: 5432
+    depends_on:
+      - pay-db
+    ports:
+      - "8009:8000"
+
+  pay-db:
+    image: postgres:16-alpine
+    container_name: pay-db
+    environment:
+      POSTGRES_DB: pay_db
+      POSTGRES_USER: pay_user
+      POSTGRES_PASSWORD: pay_pass
+    volumes:
+      - pay_db_data:/var/lib/postgresql/data
+
+  comment-rate-service:
+    build: ./comment-rate-service
+    container_name: comment-rate-service
+    environment:
+      POSTGRES_DB: comment_rate_db
+      POSTGRES_USER: comment_rate_user
+      POSTGRES_PASSWORD: comment_rate_pass
+      POSTGRES_HOST: comment-rate-db
+      POSTGRES_PORT: 5432
+    depends_on:
+      - comment-rate-db
+    ports:
+      - "8010:8000"
+
+  comment-rate-db:
+    image: postgres:16-alpine
+    container_name: comment-rate-db
+    environment:
+      POSTGRES_DB: comment_rate_db
+      POSTGRES_USER: comment_rate_user
+      POSTGRES_PASSWORD: comment_rate_pass
+    volumes:
+      - comment_rate_db_data:/var/lib/postgresql/data
+
+  recommender-ai-service:
+    build: ./recommender-ai-service
+    container_name: recommender-ai-service
+    environment:
+      POSTGRES_DB: recommender_db
+      POSTGRES_USER: recommender_user
+      POSTGRES_PASSWORD: recommender_pass
+      POSTGRES_HOST: recommender-ai-db
+      POSTGRES_PORT: 5432
+    depends_on:
+      - recommender-ai-db
+      - comment-rate-service
+      - book-service
+    ports:
+      - "8011:8000"
+
+  recommender-ai-db:
+    image: postgres:16-alpine
+    container_name: recommender-ai-db
+    environment:
+      POSTGRES_DB: recommender_db
+      POSTGRES_USER: recommender_user
+      POSTGRES_PASSWORD: recommender_pass
+    volumes:
+      - recommender_ai_db_data:/var/lib/postgresql/data
+
+volumes:
+  book_db_data:
+  customer_db_data:
+  cart_db_data:
+  staff_db_data:
+  manager_db_data:
+  catalog_db_data:
+  order_db_data:
+  ship_db_data:
+  pay_db_data:
+  comment_rate_db_data:
+  recommender_ai_db_data:
