@@ -6,78 +6,188 @@
   <title>BookStore</title>
   <style>
     :root {
-      --bg: #f7f2e8;
-      --surface: #fffdf8;
-      --ink: #1f1a14;
-      --muted: #6d6254;
-      --line: #ddd2c2;
-      --primary: #0f766e;
-      --primary-strong: #115e59;
-      --danger: #b91c1c;
-      --ok: #166534;
+      --bg: #f6f8fc;
+      --surface: #ffffff;
+      --surface-soft: #f9fbff;
+      --ink: #172133;
+      --muted: #667085;
+      --line: #dfe6f2;
+      --primary: #125de6;
+      --primary-strong: #0e4cb9;
+      --danger: #c71f37;
+      --ok: #18834b;
+      --accent: #ffd166;
     }
     * { box-sizing: border-box; }
     body {
       margin: 0;
-      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(145deg, #f7f2e8, #f2e9da 50%, #edf4ef);
+      font-family: "Inter", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      background:
+        radial-gradient(circle at 10% 0%, #e7eeff 0%, transparent 40%),
+        radial-gradient(circle at 90% 10%, #e9f8ff 0%, transparent 38%),
+        var(--bg);
       color: var(--ink);
+      min-height: 100vh;
     }
-    .container { max-width: 1180px; margin: 0 auto; padding: 18px; }
+    .container { max-width: 1240px; margin: 0 auto; padding: 20px; }
+
     .header {
       background: var(--surface);
       border: 1px solid var(--line);
-      border-radius: 16px;
-      padding: 14px;
-      box-shadow: 0 8px 22px rgba(40, 30, 20, 0.08);
+      border-radius: 18px;
+      padding: 22px;
+      box-shadow: 0 12px 28px rgba(16, 24, 40, 0.08);
     }
-    .brand { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
-    .brand h1 { margin: 0; font-size: 28px; }
-    .brand p { margin: 4px 0 0; color: var(--muted); }
+
+    .brand {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 20px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+    .brand h1 {
+      margin: 0;
+      font-size: 32px;
+      letter-spacing: -0.5px;
+    }
+    .brand p { margin: 6px 0 0; color: var(--muted); font-size: 14px; }
+
+    .hero {
+      margin-top: 14px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: linear-gradient(120deg, #eef4ff, #f5f9ff 55%, #f7fcff);
+      padding: 18px;
+      display: grid;
+      grid-template-columns: 1.4fr 1fr;
+      gap: 16px;
+      align-items: center;
+    }
+    .hero h2 { margin: 0 0 8px; font-size: 24px; }
+    .hero p { margin: 0; color: #52607a; line-height: 1.5; }
+    .hero-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+    .hero-stat {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 10px;
+      text-align: center;
+    }
+    .hero-stat b { display: block; font-size: 18px; }
+    .hero-stat span { color: var(--muted); font-size: 12px; }
+
     .chips { display: flex; flex-wrap: wrap; gap: 8px; }
-    .chip { padding: 5px 10px; border-radius: 999px; background: #efe6d8; color: #4f473d; font-size: 12px; }
-    .nav { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+    .chip {
+      padding: 6px 11px;
+      border-radius: 999px;
+      background: #eef3ff;
+      color: #304a7d;
+      border: 1px solid #d8e3ff;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px solid var(--line);
+    }
     .nav a {
       text-decoration: none;
-      color: #40382f;
+      color: #294070;
       border: 1px solid var(--line);
-      background: #faf6ef;
+      background: #f6f9ff;
       border-radius: 999px;
-      padding: 7px 12px;
+      padding: 8px 13px;
       font-size: 13px;
+      font-weight: 600;
     }
-    .nav a:hover { background: #efe7da; }
+    .nav a:hover { background: #eaf0ff; }
 
     .panel {
-      margin-top: 14px;
+      margin-top: 16px;
       background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 18px;
+      box-shadow: 0 8px 20px rgba(16, 24, 40, 0.06);
+    }
+
+    .section-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .grid {
+      display: grid;
+      gap: 14px;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    }
+
+    .book-card {
       border: 1px solid var(--line);
       border-radius: 14px;
       padding: 14px;
-      box-shadow: 0 6px 18px rgba(40, 30, 20, 0.05);
-    }
-    .grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); }
-    .book-card {
-      border: 1px solid var(--line);
-      border-radius: 12px;
-      padding: 12px;
       background: #fff;
+      transition: transform .2s ease, box-shadow .2s ease;
+      box-shadow: 0 6px 14px rgba(16, 24, 40, 0.04);
     }
-    .book-title { margin: 0 0 4px; font-size: 17px; }
+    .book-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 20px rgba(16, 24, 40, 0.08);
+    }
+    .book-cover {
+      width: 100%;
+      height: 118px;
+      border-radius: 10px;
+      border: 1px solid var(--line);
+      background: linear-gradient(130deg, #dce7ff, #edf4ff 60%, #fff5de);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #365081;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+    .book-title { margin: 0 0 4px; font-size: 17px; line-height: 1.3; }
     .book-meta { margin: 0; color: var(--muted); font-size: 13px; }
+    .book-price {
+      margin: 8px 0 2px;
+      color: #0f4fc8;
+      font-size: 18px;
+      font-weight: 700;
+    }
+    .book-actions { display: grid; gap: 8px; margin-top: 10px; }
 
     h2 { margin: 0 0 10px; font-size: 20px; }
     h3 { margin: 0 0 8px; font-size: 16px; }
 
     .row { display: grid; gap: 10px; grid-template-columns: 1fr 1fr; }
-    label { display: block; margin: 8px 0 4px; color: var(--muted); font-size: 13px; }
+    label { display: block; margin: 9px 0 5px; color: var(--muted); font-size: 13px; font-weight: 600; }
     input, select, button {
       width: 100%;
-      border-radius: 9px;
+      border-radius: 10px;
       border: 1px solid var(--line);
-      padding: 9px 10px;
+      padding: 10px 11px;
       font-size: 14px;
       background: #fff;
+    }
+    input:focus, select:focus {
+      outline: none;
+      border-color: #97b5ff;
+      box-shadow: 0 0 0 3px rgba(18, 93, 230, 0.12);
     }
     button {
       border: none;
@@ -86,18 +196,53 @@
       font-weight: 600;
       cursor: pointer;
       margin-top: 8px;
+      box-shadow: 0 8px 16px rgba(18, 93, 230, 0.25);
     }
     button:hover { background: var(--primary-strong); }
     .btn-danger { background: var(--danger); }
+    .btn-soft {
+      background: #eef3ff;
+      color: #254178;
+      box-shadow: none;
+      border: 1px solid #d7e4ff;
+    }
 
-    .list { border: 1px solid var(--line); border-radius: 10px; overflow: auto; }
+    .list {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      overflow: auto;
+      background: var(--surface-soft);
+    }
+    .toolbar {
+      display: grid;
+      grid-template-columns: 1.6fr 180px;
+      gap: 10px;
+      margin-bottom: 12px;
+      align-items: end;
+    }
+    .pagination {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      justify-content: flex-end;
+      margin-top: 12px;
+      flex-wrap: wrap;
+    }
+    .pagination button {
+      width: auto;
+      margin-top: 0;
+      padding: 7px 12px;
+      box-shadow: none;
+    }
+    .action-group { display: flex; gap: 6px; }
+    .action-group button { margin-top: 0; padding: 7px 10px; font-size: 13px; box-shadow: none; }
     .cart-row {
       display: grid;
       grid-template-columns: 40px 1.4fr 100px 90px 100px;
       gap: 8px;
       align-items: center;
-      padding: 10px;
-      border-bottom: 1px dashed var(--line);
+      padding: 11px;
+      border-bottom: 1px solid #ebf0f8;
       font-size: 14px;
       background: #fff;
     }
@@ -113,7 +258,7 @@
       z-index: 1000;
       min-width: 220px;
       max-width: 420px;
-      padding: 10px 12px;
+      padding: 10px 13px;
       border-radius: 10px;
       color: #fff;
       display: none;
@@ -123,7 +268,10 @@
     #toast.err { background: var(--danger); }
 
     @media (max-width: 800px) {
+      .hero { grid-template-columns: 1fr; }
+      .hero-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
       .row { grid-template-columns: 1fr; }
+      .toolbar { grid-template-columns: 1fr; }
       .cart-row {
         grid-template-columns: 32px 1fr;
         gap: 6px;
@@ -138,20 +286,24 @@
       <div class="brand">
         <div>
           <h1>BookStore</h1>
-          <p>Browse books, add to cart, checkout as order.</p>
+          <p>Discover great titles, collect your favorites, and checkout in seconds.</p>
         </div>
         <div class="chips" id="sessionChips"></div>
       </div>
-      <nav class="nav">
-        <a href="/" onclick="go(event, '/')">Home</a>
-        <a href="/books" onclick="go(event, '/books')">Books</a>
-        <a href="/cart" onclick="go(event, '/cart')">Cart</a>
-        <a href="/order" onclick="go(event, '/order')">Checkout</a>
-        <a href="/ratings" onclick="go(event, '/ratings')">Ratings</a>
-        <a href="/login" onclick="go(event, '/login')">Login</a>
-        <a href="/register" onclick="go(event, '/register')">Register</a>
-        <a href="/staff-books" onclick="go(event, '/staff-books')">Staff</a>
-      </nav>
+
+      <div class="hero">
+        <div>
+          <h2>Book shopping experience, polished like a real store</h2>
+          <p>Browse curated books, manage cart quantities, and track every order detail in one clean and professional dashboard.</p>
+        </div>
+        <div class="hero-stats">
+          <div class="hero-stat"><b>10K+</b><span>Book Titles</span></div>
+          <div class="hero-stat"><b>24/7</b><span>Order Access</span></div>
+          <div class="hero-stat"><b>Fast</b><span>Checkout Flow</span></div>
+        </div>
+      </div>
+
+      <nav id="mainNav" class="nav"></nav>
     </header>
 
     <section id="loginPage" class="panel hidden">
@@ -188,17 +340,42 @@
     </section>
 
     <section id="booksPage" class="panel hidden">
-      <h2>Books</h2>
+      <div class="section-head">
+        <h2>Featured Books</h2>
+        <span id="bookCountChip" class="chip">0 Books</span>
+      </div>
+      <div class="toolbar">
+        <div>
+          <label>Search by title</label>
+          <input id="bookSearch" placeholder="Type book title..." oninput="onBookSearchChange()">
+        </div>
+        <div>
+          <label>Books per page</label>
+          <select id="bookPageSize" onchange="onBookPageSizeChange()">
+            <option value="8">8</option>
+            <option value="12" selected>12</option>
+            <option value="16">16</option>
+            <option value="24">24</option>
+          </select>
+        </div>
+      </div>
       <div id="bookGrid" class="grid"></div>
+      <div id="bookPagination" class="pagination"></div>
     </section>
 
     <section id="bookDetailPage" class="panel hidden">
-      <h2>Book Detail</h2>
+      <div class="section-head">
+        <h2>Book Detail</h2>
+        <button class="btn-soft" onclick="go(event, '/books')">Back To Books</button>
+      </div>
       <div id="bookDetailWrap"></div>
     </section>
 
     <section id="cartPage" class="panel hidden">
-      <h2>Your Cart</h2>
+      <div class="section-head">
+        <h2>Your Shopping Cart</h2>
+        <span class="chip">Smart Checkout</span>
+      </div>
       <p class="muted">Choose books to checkout. Order total is calculated automatically.</p>
       <div id="cartWrap" class="list"></div>
       <div class="row" style="margin-top:10px; align-items:end;">
@@ -217,60 +394,76 @@
       <button onclick="checkoutSelected()">Checkout Selected (Create Order)</button>
     </section>
 
-    <section id="ratingsPage" class="panel hidden">
-      <h2>Ratings</h2>
-      <div class="row">
-        <div>
-          <label>Book ID</label>
-          <input id="rateBookId" type="number" placeholder="book id">
-        </div>
-        <div>
-          <label>Score (1-5)</label>
-          <input id="rateScore" type="number" min="1" max="5" value="5">
-        </div>
+    <section id="staffPage" class="panel hidden">
+      <div class="section-head">
+        <h2>Staff Book Management</h2>
+        <span class="chip">Back Office</span>
       </div>
-      <label>Comment</label>
-      <input id="rateComment" value="Great book">
-      <button onclick="rateBook()">Submit Rating</button>
-      <button onclick="loadRatings()">Refresh Ratings</button>
-      <div id="ratingList" class="list" style="margin-top:10px"></div>
+      <div class="section-head">
+        <p class="muted">View current catalog and manage each book with edit/delete actions.</p>
+        <button onclick="go(event, '/staff-books/new')" style="max-width:220px">+ Add New Book</button>
+      </div>
+      <div id="staffBookList" class="list"></div>
     </section>
 
-    <section id="staffPage" class="panel hidden">
-      <h2>Staff - Manage Books</h2>
+    <section id="staffCreatePage" class="panel hidden">
+      <div class="section-head">
+        <h2>Add New Book</h2>
+        <button class="btn-soft" onclick="go(event, '/staff-books')">Back To List</button>
+      </div>
       <div class="row">
         <div>
-          <label>Title</label><input id="staffTitle" value="Domain Driven Design">
+          <label>Title</label><input id="staffCreateTitle" value="Domain Driven Design">
         </div>
         <div>
-          <label>Author</label><input id="staffAuthor" value="Eric Evans">
+          <label>Author</label><input id="staffCreateAuthor" value="Eric Evans">
         </div>
       </div>
       <div class="row">
-        <div><label>Price</label><input id="staffPrice" value="22.00"></div>
-        <div><label>Stock</label><input id="staffStock" type="number" value="18"></div>
+        <div><label>Price</label><input id="staffCreatePrice" value="22.00"></div>
+        <div><label>Stock</label><input id="staffCreateStock" type="number" value="18"></div>
       </div>
-      <button onclick="staffCreateBook()">Create Book</button>
+      <button onclick="staffCreateBook()">Add Book</button>
+    </section>
+
+    <section id="staffEditPage" class="panel hidden">
+      <div class="section-head">
+        <h2>Edit Book</h2>
+        <button class="btn-soft" onclick="go(event, '/staff-books')">Back To List</button>
+      </div>
+      <input id="staffEditBookId" type="hidden">
       <div class="row">
-        <div><label>Book ID</label><input id="staffBookId" type="number"></div>
-        <div><label>New Stock</label><input id="staffNewStock" type="number" value="12"></div>
+        <div>
+          <label>Title</label><input id="staffEditTitle">
+        </div>
+        <div>
+          <label>Author</label><input id="staffEditAuthor">
+        </div>
       </div>
-      <button onclick="staffUpdateBook()">Update Stock</button>
-      <button class="btn-danger" onclick="staffDeleteBook()">Delete Book</button>
+      <div class="row">
+        <div><label>Price</label><input id="staffEditPrice"></div>
+        <div><label>Stock</label><input id="staffEditStock" type="number"></div>
+      </div>
+      <button onclick="staffUpdateBook()">Save Changes</button>
+      <button class="btn-danger" onclick="staffDeleteBookFromEdit()">Delete This Book</button>
     </section>
 
     <section id="orderPage" class="panel hidden">
-      <h2>Your Orders</h2>
+      <div class="section-head">
+        <h2>Your Orders</h2>
+        <span class="chip">Purchase History</span>
+      </div>
       <p class="muted">Orders created from checked out cart items.</p>
       <div id="orderList" class="list" style="margin-top:10px"></div>
-      <button onclick="go(event, '/cart')">Go To Cart</button>
-      <button class="btn-danger" onclick="logout()" style="max-width:220px">Logout</button>
+      <button class="btn-soft" onclick="go(event, '/cart')">Go To Cart</button>
     </section>
 
     <section id="orderDetailPage" class="panel hidden">
-      <h2>Order Detail</h2>
+      <div class="section-head">
+        <h2>Order Detail</h2>
+        <button class="btn-soft" onclick="go(event, '/order')">Back To Orders</button>
+      </div>
       <div id="orderDetailWrap"></div>
-      <button onclick="go(event, '/order')">Back To Orders</button>
     </section>
 
     <div id="toast"></div>
@@ -286,11 +479,17 @@
     orders: [],
     orderDetail: null,
     selectedItemIds: new Set(),
+    staffBooks: [],
+    ratings: [],
+    purchasedBookIds: new Set(),
+    bookSearch: "",
+    bookPage: 1,
+    bookPageSize: 12,
   };
 
   const pages = [
     "loginPage", "registerPage", "booksPage", "bookDetailPage",
-    "cartPage", "ratingsPage", "staffPage", "orderPage", "orderDetailPage"
+    "cartPage", "staffPage", "staffCreatePage", "staffEditPage", "orderPage", "orderDetailPage"
   ];
 
   function notify(message, ok = true) {
@@ -341,6 +540,15 @@
     return m ? Number(m[1]) : null;
   }
 
+  function isStaffEditPath(path) {
+    return /^\/staff-books\/\d+\/edit$/.test(path);
+  }
+
+  function getStaffEditBookId(path) {
+    const m = path.match(/^\/staff-books\/(\d+)\/edit$/);
+    return m ? Number(m[1]) : null;
+  }
+
   function updateSessionChips() {
     const c = document.getElementById("sessionChips");
     if (!state.user) {
@@ -352,6 +560,38 @@
       <span class="chip">${state.user.role}</span>
       <span class="chip">Cart: ${state.cartId ?? '-'}</span>
     `;
+  }
+
+  function roleHomePath() {
+    if (!state.user) return "/login";
+    return state.user.role === "STAFF" ? "/staff-books" : "/";
+  }
+
+  function renderNav() {
+    const nav = document.getElementById("mainNav");
+    const links = [
+      { path: "/", label: "Home" },
+      { path: "/books", label: "Books" },
+    ];
+
+    if (!state.user) {
+      links.push({ path: "/login", label: "Login" });
+      links.push({ path: "/register", label: "Register" });
+    } else if (state.user.role === "STAFF") {
+      links.push({ path: "/staff-books", label: "Staff" });
+      links.push({ action: "logout", label: "Logout" });
+    } else {
+      links.push({ path: "/cart", label: "Cart" });
+      links.push({ path: "/order", label: "Checkout" });
+      links.push({ action: "logout", label: "Logout" });
+    }
+
+    nav.innerHTML = links.map((item) => {
+      if (item.action === "logout") {
+        return `<a href="/login" onclick="logout(); return false;">${item.label}</a>`;
+      }
+      return `<a href="${item.path}" onclick="go(event, '${item.path}')">${item.label}</a>`;
+    }).join("");
   }
 
   async function ensureBooks() {
@@ -369,19 +609,37 @@
   }
 
   function renderBooks() {
+    const filteredBooks = state.books.filter((b) =>
+      String(b.title || "").toLowerCase().includes(state.bookSearch.toLowerCase())
+    );
+
+    const totalBooks = filteredBooks.length;
+    const totalPages = Math.max(1, Math.ceil(totalBooks / state.bookPageSize));
+    if (state.bookPage > totalPages) state.bookPage = totalPages;
+    if (state.bookPage < 1) state.bookPage = 1;
+
+    const startIndex = (state.bookPage - 1) * state.bookPageSize;
+    const pageBooks = filteredBooks.slice(startIndex, startIndex + state.bookPageSize);
+
+    document.getElementById("bookCountChip").textContent = `${totalBooks} Books`;
+    document.getElementById("bookSearch").value = state.bookSearch;
+    document.getElementById("bookPageSize").value = String(state.bookPageSize);
+
     const wrap = document.getElementById("bookGrid");
-    if (!state.books.length) {
+    if (!pageBooks.length) {
       wrap.innerHTML = '<div class="book-card"><p class="muted">No books available.</p></div>';
+      renderBookPagination(totalPages, totalBooks);
       return;
     }
 
-    wrap.innerHTML = state.books.map((b) => `
+    wrap.innerHTML = pageBooks.map((b) => `
       <article class="book-card">
+        <div class="book-cover">${String(b.title).slice(0, 1).toUpperCase()}</div>
         <h3 class="book-title">${b.title}</h3>
         <p class="book-meta">Author: ${b.author}</p>
-        <p class="book-meta">Price: ${b.price}</p>
+        <p class="book-price">${Number(b.price).toFixed(2)}</p>
         <p class="book-meta">Stock: ${b.stock}</p>
-        <div class="row" style="margin-top:6px;">
+        <div class="row" style="margin-top:8px;">
           <div>
             <label>Quantity</label>
             <input id="qty-${b.id}" type="number" min="1" value="1">
@@ -390,8 +648,82 @@
             <button onclick="addBookToCart(${b.id})">Add To Cart</button>
           </div>
         </div>
-        <button onclick="go(event, '/book-${b.id}')">View Detail</button>
+        <div class="book-actions">
+          <button class="btn-soft" onclick="go(event, '/book-${b.id}')">View Detail</button>
+        </div>
       </article>
+    `).join("");
+
+    renderBookPagination(totalPages, totalBooks);
+  }
+
+  function renderBookPagination(totalPages, totalBooks) {
+    const wrap = document.getElementById("bookPagination");
+    if (totalBooks === 0) {
+      wrap.innerHTML = "";
+      return;
+    }
+
+    wrap.innerHTML = `
+      <button class="btn-soft" onclick="changeBookPage(-1)" ${state.bookPage <= 1 ? "disabled" : ""}>Previous</button>
+      <span class="chip">Page ${state.bookPage} / ${totalPages}</span>
+      <button class="btn-soft" onclick="changeBookPage(1)" ${state.bookPage >= totalPages ? "disabled" : ""}>Next</button>
+    `;
+  }
+
+  function onBookSearchChange() {
+    state.bookSearch = document.getElementById("bookSearch").value.trim();
+    state.bookPage = 1;
+    renderBooks();
+  }
+
+  function onBookPageSizeChange() {
+    state.bookPageSize = Number(document.getElementById("bookPageSize").value || 12);
+    state.bookPage = 1;
+    renderBooks();
+  }
+
+  function changeBookPage(delta) {
+    state.bookPage += delta;
+    renderBooks();
+  }
+
+  function ratingFormHtml(bookId) {
+    if (!state.user || state.user.role !== "CUSTOMER") {
+      return '<p class="muted" style="margin-top:12px;">Login as CUSTOMER to write a rating.</p>';
+    }
+    if (!state.purchasedBookIds.has(bookId)) {
+      return '<p class="muted" style="margin-top:12px;">You can rate this book only after purchasing it.</p>';
+    }
+    return `
+      <div class="panel" style="margin-top:14px; padding:12px; box-shadow:none;">
+        <h3 style="margin-bottom:6px;">Write Your Rating</h3>
+        <div class="row">
+          <div>
+            <label>Score (1-5)</label>
+            <input id="detailRateScore" type="number" min="1" max="5" value="5">
+          </div>
+          <div>
+            <label>Comment</label>
+            <input id="detailRateComment" value="Great book">
+          </div>
+        </div>
+        <button onclick="submitBookRating(${bookId})">Submit Rating</button>
+      </div>
+    `;
+  }
+
+  function ratingsListHtml(bookId) {
+    const ratingRows = state.ratings.filter((r) => Number(r.book_id) === Number(bookId));
+    if (!ratingRows.length) {
+      return '<div class="cart-row"><div class="muted">No ratings for this book yet.</div></div>';
+    }
+    return ratingRows.map((r) => `
+      <div class="cart-row" style="grid-template-columns: 120px 1fr 140px;">
+        <div><b>Score: ${r.score}</b></div>
+        <div>${r.comment || ''}</div>
+        <div class="muted">Customer #${r.customer_id}</div>
+      </div>
     `).join("");
   }
 
@@ -404,8 +736,8 @@
     }
     wrap.innerHTML = `
       <h3>${b.title}</h3>
-      <p class="muted">Author: ${b.author}</p>
-      <p class="muted">Price: ${b.price}</p>
+      <p class="book-meta">Author: ${b.author}</p>
+      <p class="book-price">${Number(b.price).toFixed(2)}</p>
       <p class="muted">Stock: ${b.stock}</p>
       <div class="row">
         <div>
@@ -416,8 +748,27 @@
           <button onclick="addBookToCart(${b.id}, 'detailQty')">Add To Cart</button>
         </div>
       </div>
-      <button onclick="go(event, '/books')">Back To Books</button>
+      ${ratingFormHtml(b.id)}
+      <div style="margin-top:14px;">
+        <h3>Ratings</h3>
+        <div class="list" style="margin-top:8px;">
+          ${ratingsListHtml(b.id)}
+        </div>
+      </div>
     `;
+  }
+
+  async function ensureRatings() {
+    state.ratings = await api("/rating/ratings/");
+  }
+
+  async function ensurePurchasedBooks() {
+    state.purchasedBookIds.clear();
+    if (!state.user || state.user.role !== "CUSTOMER") return;
+    const orders = await api(`/order/orders/?customer_id=${state.user.id}`);
+    orders.forEach((o) => {
+      (o.items || []).forEach((item) => state.purchasedBookIds.add(Number(item.book_id)));
+    });
   }
 
   function renderOrderDetail() {
@@ -433,14 +784,14 @@
       <p><b>Order #${o.id}</b></p>
       <p class="muted">Status: ${o.status}</p>
       <p class="muted">Pay/Ship: ${o.pay_method} / ${o.ship_method}</p>
-      <p class="muted">Total: ${o.total_amount}</p>
+      <p class="book-price">Total: ${Number(o.total_amount).toFixed(2)}</p>
       <div class="list" style="margin-top:10px;">
         ${items.length ? items.map((it) => `
           <div class="cart-row" style="grid-template-columns: 1.5fr 100px 90px 100px;">
             <div><b>${it.title || ('Book #' + it.book_id)}</b><br><span class="muted">Book ID: ${it.book_id}</span></div>
-            <div>Price: ${it.unit_price}</div>
+            <div>Price: ${Number(it.unit_price).toFixed(2)}</div>
             <div>Qty: ${it.quantity}</div>
-            <div>Sub: ${it.subtotal}</div>
+            <div>Sub: ${Number(it.subtotal).toFixed(2)}</div>
           </div>
         `).join('') : '<div class="cart-row"><div class="muted">No item detail.</div></div>'}
       </div>
@@ -599,7 +950,7 @@
       ? orders.map((o) => `
           <div class="cart-row" style="grid-template-columns: 1fr 120px 140px 190px;">
             <div><b><a href="/order-${o.id}" onclick="go(event, '/order-${o.id}')">Order #${o.id}</a></b><br><span class="muted">Customer: ${o.customer_id}</span></div>
-            <div>Total: ${o.total_amount}</div>
+            <div>Total: ${Number(o.total_amount).toFixed(2)}</div>
             <div>${o.pay_method} / ${o.ship_method}</div>
             <div>Status: ${o.status}</div>
           </div>
@@ -613,24 +964,59 @@
     renderOrderDetail();
   }
 
-  async function loadRatings() {
-    const ratings = await api("/rating/ratings/");
-    const wrap = document.getElementById("ratingList");
-    wrap.innerHTML = ratings.length
-      ? ratings.map((r) => `<div class="cart-row"><div><b>Book #${r.book_id}</b></div><div>Score: ${r.score}</div><div>${r.comment || ''}</div></div>`).join("")
-      : '<div class="cart-row"><div class="muted">No ratings yet.</div></div>';
+  async function loadStaffBooks() {
+    const books = await api("/staff/staff/books/");
+    state.staffBooks = books;
+    renderStaffBooks();
   }
 
-  async function rateBook() {
+  function renderStaffBooks() {
+    const wrap = document.getElementById("staffBookList");
+    const books = state.staffBooks || [];
+    wrap.innerHTML = books.length
+      ? books.map((b) => `
+          <div class="cart-row" style="grid-template-columns: 1.8fr 1.2fr 110px 90px 190px;">
+            <div><b>${b.title}</b></div>
+            <div class="muted">${b.author}</div>
+            <div>Price: ${Number(b.price).toFixed(2)}</div>
+            <div>Stock: ${b.stock}</div>
+            <div class="action-group">
+              <button class="btn-soft" onclick="go(event, '/staff-books/${b.id}/edit')">Edit</button>
+              <button class="btn-danger" onclick="staffDeleteBook(${b.id})">Delete</button>
+            </div>
+          </div>
+        `).join("")
+      : '<div class="cart-row"><div class="muted">No books available.</div></div>';
+  }
+
+  async function loadStaffBookForEdit(bookId) {
+    const b = await api(`/staff/staff/books/${bookId}/`);
+    document.getElementById("staffEditBookId").value = b.id;
+    document.getElementById("staffEditTitle").value = b.title || "";
+    document.getElementById("staffEditAuthor").value = b.author || "";
+    document.getElementById("staffEditPrice").value = b.price || "";
+    document.getElementById("staffEditStock").value = b.stock ?? 0;
+  }
+
+  async function submitBookRating(bookId) {
     try {
+      if (!state.user || state.user.role !== "CUSTOMER") {
+        notify("Please login as CUSTOMER.", false);
+        return;
+      }
+      if (!state.purchasedBookIds.has(Number(bookId))) {
+        notify("You can only rate books you purchased.", false);
+        return;
+      }
       await api("/rating/ratings/", "POST", {
         customer_id: state.user.id,
-        book_id: Number(document.getElementById("rateBookId").value),
-        score: Number(document.getElementById("rateScore").value),
-        comment: document.getElementById("rateComment").value,
+        book_id: Number(bookId),
+        score: Number(document.getElementById("detailRateScore").value),
+        comment: document.getElementById("detailRateComment").value,
       });
       notify("Rating submitted.");
-      await loadRatings();
+      await ensureRatings();
+      renderBookDetail(bookId);
     } catch {
       notify("Rating failed.", false);
     }
@@ -640,16 +1026,18 @@
     try {
       await api("/staff/staff/books/", "POST", {
         book: {
-          title: document.getElementById("staffTitle").value,
-          author: document.getElementById("staffAuthor").value,
-          price: document.getElementById("staffPrice").value,
-          stock: Number(document.getElementById("staffStock").value),
+          title: document.getElementById("staffCreateTitle").value,
+          author: document.getElementById("staffCreateAuthor").value,
+          price: document.getElementById("staffCreatePrice").value,
+          stock: Number(document.getElementById("staffCreateStock").value),
         },
         note: "Created from UI",
       });
       await ensureBooks();
       renderBooks();
+      await loadStaffBooks();
       notify("Book created.");
+      go(null, "/staff-books");
     } catch {
       notify("Create book failed.", false);
     }
@@ -657,27 +1045,40 @@
 
   async function staffUpdateBook() {
     try {
-      const bookId = Number(document.getElementById("staffBookId").value);
-      const stock = Number(document.getElementById("staffNewStock").value);
-      await api(`/staff/staff/books/${bookId}/`, "PATCH", { stock });
+      const bookId = Number(document.getElementById("staffEditBookId").value);
+      await api(`/staff/staff/books/${bookId}/`, "PATCH", {
+        title: document.getElementById("staffEditTitle").value,
+        author: document.getElementById("staffEditAuthor").value,
+        price: document.getElementById("staffEditPrice").value,
+        stock: Number(document.getElementById("staffEditStock").value),
+      });
       await ensureBooks();
       renderBooks();
+      await loadStaffBooks();
       notify("Book updated.");
+      go(null, "/staff-books");
     } catch {
       notify("Update book failed.", false);
     }
   }
 
-  async function staffDeleteBook() {
+  async function staffDeleteBook(bookId) {
     try {
-      const bookId = Number(document.getElementById("staffBookId").value);
+      if (!confirm("Delete this book?")) return;
       await api(`/staff/staff/books/${bookId}/`, "DELETE");
       await ensureBooks();
       renderBooks();
+      await loadStaffBooks();
       notify("Book deleted.");
     } catch {
       notify("Delete book failed.", false);
     }
+  }
+
+  async function staffDeleteBookFromEdit() {
+    const bookId = Number(document.getElementById("staffEditBookId").value);
+    await staffDeleteBook(bookId);
+    go(null, "/staff-books");
   }
 
   async function registerUser() {
@@ -709,8 +1110,9 @@
       localStorage.setItem("demo_user", JSON.stringify(state.user));
       await ensureCartMeta();
       updateSessionChips();
+      renderNav();
       notify(`Welcome ${state.user.name}`);
-      go(null, "/books");
+      go(null, roleHomePath());
     } catch {
       notify("Login failed.", false);
     }
@@ -724,13 +1126,25 @@
     localStorage.removeItem("demo_token");
     localStorage.removeItem("demo_user");
     updateSessionChips();
+    renderNav();
     go(null, "/login");
   }
 
   async function renderRoute() {
     const path = window.location.pathname;
+
+    if (path === "/checkout") {
+      go(null, "/order");
+      return;
+    }
+    if (path === "/carts") {
+      go(null, "/cart");
+      return;
+    }
+
     hideAllPages();
     updateSessionChips();
+    renderNav();
 
     if (!state.books.length) {
       await ensureBooks();
@@ -743,6 +1157,10 @@
     }
 
     if (isBookDetailPath(path)) {
+      if (state.user && state.user.role === "CUSTOMER") {
+        await ensurePurchasedBooks();
+      }
+      await ensureRatings();
       document.getElementById("bookDetailPage").classList.remove("hidden");
       renderBookDetail(getBookIdFromPath(path));
       return;
@@ -760,19 +1178,32 @@
     }
 
     if (path === "/login") {
+      if (state.user) {
+        go(null, roleHomePath());
+        return;
+      }
       document.getElementById("loginPage").classList.remove("hidden");
       return;
     }
 
     if (path === "/register") {
+      if (state.user) {
+        go(null, roleHomePath());
+        return;
+      }
       document.getElementById("registerPage").classList.remove("hidden");
       return;
     }
 
     if (path === "/cart") {
-      if (!state.user || state.user.role !== "CUSTOMER") {
+      if (!state.user) {
         notify("Please login as CUSTOMER.", false);
         go(null, "/login");
+        return;
+      }
+      if (state.user.role !== "CUSTOMER") {
+        notify("Only CUSTOMER can access this page.", false);
+        go(null, "/staff-books");
         return;
       }
       await ensureCartMeta();
@@ -782,24 +1213,18 @@
     }
 
     if (path === "/order") {
-      if (!state.user || state.user.role !== "CUSTOMER") {
+      if (!state.user) {
         notify("Please login as CUSTOMER.", false);
         go(null, "/login");
+        return;
+      }
+      if (state.user.role !== "CUSTOMER") {
+        notify("Only CUSTOMER can access this page.", false);
+        go(null, "/staff-books");
         return;
       }
       await loadOrders();
       document.getElementById("orderPage").classList.remove("hidden");
-      return;
-    }
-
-    if (path === "/ratings") {
-      if (!state.user || state.user.role !== "CUSTOMER") {
-        notify("Please login as CUSTOMER.", false);
-        go(null, "/login");
-        return;
-      }
-      await loadRatings();
-      document.getElementById("ratingsPage").classList.remove("hidden");
       return;
     }
 
@@ -809,7 +1234,40 @@
         go(null, "/login");
         return;
       }
+      await loadStaffBooks();
       document.getElementById("staffPage").classList.remove("hidden");
+      return;
+    }
+
+    if (path === "/staff-books/new") {
+      if (!state.user || state.user.role !== "STAFF") {
+        notify("Only STAFF can access this page.", false);
+        go(null, "/login");
+        return;
+      }
+      document.getElementById("staffCreatePage").classList.remove("hidden");
+      return;
+    }
+
+    if (isStaffEditPath(path)) {
+      if (!state.user || state.user.role !== "STAFF") {
+        notify("Only STAFF can access this page.", false);
+        go(null, "/login");
+        return;
+      }
+      const bookId = getStaffEditBookId(path);
+      if (!bookId) {
+        notify("Invalid book id.", false);
+        go(null, "/staff-books");
+        return;
+      }
+      try {
+        await loadStaffBookForEdit(bookId);
+        document.getElementById("staffEditPage").classList.remove("hidden");
+      } catch {
+        notify("Cannot load book for editing.", false);
+        go(null, "/staff-books");
+      }
       return;
     }
 

@@ -38,6 +38,14 @@ class StaffBookManageView(APIView):
 
 
 class StaffBookManageDetailView(APIView):
+    def get(self, request, book_id):
+        r = requests.get(f"{BOOK_SERVICE_URL}/books/{book_id}/", timeout=5)
+        if r.status_code == 404:
+            return Response({"error": "Book not found"}, status=status.HTTP_404_NOT_FOUND)
+        if r.status_code != 200:
+            return Response({"error": "Cannot fetch book", "details": r.text}, status=status.HTTP_502_BAD_GATEWAY)
+        return Response(r.json())
+
     def patch(self, request, book_id):
         r = requests.patch(f"{BOOK_SERVICE_URL}/books/{book_id}/", json=request.data, timeout=5)
         if r.status_code == 404:
