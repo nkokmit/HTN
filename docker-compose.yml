@@ -16,6 +16,7 @@ services:
       - pay-service
       - comment-rate-service
       - recommender-ai-service
+      - clothes-service
 
   book-service:
     build: ./book-service
@@ -289,6 +290,30 @@ services:
     volumes:
       - recommender_ai_db_data:/var/lib/postgresql/data
 
+  clothes-service:
+    build: ./clothes-service
+    container_name: clothes-service
+    environment:
+      POSTGRES_DB: clothes_db
+      POSTGRES_USER: clothes_user
+      POSTGRES_PASSWORD: clothes_pass
+      POSTGRES_HOST: clothes-db
+      POSTGRES_PORT: 5432
+    depends_on:
+      - clothes-db
+    ports:
+      - "8012:8000"
+
+  clothes-db:
+    image: postgres:16-alpine
+    container_name: clothes-db
+    environment:
+      POSTGRES_DB: clothes_db
+      POSTGRES_USER: clothes_user
+      POSTGRES_PASSWORD: clothes_pass
+    volumes:
+      - clothes_db_data:/var/lib/postgresql/data
+
 volumes:
   book_db_data:
   customer_db_data:
@@ -301,3 +326,4 @@ volumes:
   pay_db_data:
   comment_rate_db_data:
   recommender_ai_db_data:
+  clothes_db_data:

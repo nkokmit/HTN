@@ -19,6 +19,7 @@ SERVICE_MAP = {
     "pay": "http://pay-service:8000",
     "rating": "http://comment-rate-service:8000",
     "recommender": "http://recommender-ai-service:8000",
+    "clothes": "http://clothes-service:8000",
 }
 
 HOP_BY_HOP_HEADERS = {
@@ -33,7 +34,7 @@ HOP_BY_HOP_HEADERS = {
 }
 
 INDEX_FILE = Path(__file__).with_name("index.html")
-SPA_SERVICE_ROOTS = {"cart", "order"}
+SPA_SERVICE_ROOTS = {"cart", "order", "clothes"}
 
 
 @app.get("/health")
@@ -107,7 +108,7 @@ async def serve_spa(path: str) -> Response:
     if re.fullmatch(r"book-\d+", normalized_path) or re.fullmatch(r"order-\d+", normalized_path):
         return FileResponse(INDEX_FILE)
 
-    if normalized_path in {"", "login", "register", "books", "cart", "carts", "order", "checkout", "staff-books"}:
+    if normalized_path in {"", "login", "register", "books", "clothes", "cart", "carts", "order", "checkout", "staff-books"}:
         return FileResponse(INDEX_FILE)
 
     if normalized_path in SERVICE_MAP:

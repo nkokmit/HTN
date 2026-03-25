@@ -363,6 +363,28 @@
       <div id="bookPagination" class="pagination"></div>
     </section>
 
+    <section id="clothesPage" class="panel hidden">
+      <div class="section-head">
+        <h2>Featured Clothes</h2>
+        <span id="clothesCountChip" class="chip">0 Items</span>
+      </div>
+      <div class="toolbar">
+        <div>
+          <label>Search by name</label>
+          <input id="clothesSearch" placeholder="Type clothes name..." oninput="onClothesSearchChange()">
+        </div>
+      </div>
+      <div id="clothesGrid" class="grid"></div>
+    </section>
+
+    <section id="clothesDetailPage" class="panel hidden">
+      <div class="section-head">
+        <h2>Clothes Detail</h2>
+        <button class="btn-soft" onclick="go(event, '/clothes')">Back To Clothes</button>
+      </div>
+      <div id="clothesDetailWrap"></div>
+    </section>
+
     <section id="bookDetailPage" class="panel hidden">
       <div class="section-head">
         <h2>Book Detail</h2>
@@ -404,6 +426,10 @@
         <button onclick="go(event, '/staff-books/new')" style="max-width:220px">+ Add New Book</button>
       </div>
       <div id="staffBookList" class="list"></div>
+      <div class="section-head" style="margin-top:14px;">
+        <p class="muted">Manage clothes catalog with size/color matrix variants.</p>
+        <button onclick="go(event, '/staff-clothes')" style="max-width:220px">Manage Clothes</button>
+      </div>
     </section>
 
     <section id="staffCreatePage" class="panel hidden">
@@ -448,6 +474,67 @@
       <button class="btn-danger" onclick="staffDeleteBookFromEdit()">Delete This Book</button>
     </section>
 
+    <section id="staffClothesPage" class="panel hidden">
+      <div class="section-head">
+        <h2>Staff Clothes Management</h2>
+        <span class="chip">Back Office</span>
+      </div>
+      <div class="section-head">
+        <p class="muted">View current clothes and manage each clothes with edit/delete actions.</p>
+        <button onclick="go(event, '/staff-clothes/new')" style="max-width:220px">+ Add New Clothes</button>
+      </div>
+      <div id="staffClothesList" class="list"></div>
+      <button class="btn-soft" style="margin-top:10px;max-width:220px;" onclick="go(event, '/staff-books')">Back To Staff Books</button>
+    </section>
+
+    <section id="staffClothesCreatePage" class="panel hidden">
+      <div class="section-head">
+        <h2>Add New Clothes</h2>
+        <button class="btn-soft" onclick="go(event, '/staff-clothes')">Back To List</button>
+      </div>
+      <div class="row">
+        <div>
+          <label>Name</label><input id="staffCreateClothesName" value="Basic Hoodie">
+        </div>
+        <div>
+          <label>Price</label><input id="staffCreateClothesPrice" value="35.00">
+        </div>
+      </div>
+      <label>Description</label><input id="staffCreateClothesDescription" value="Comfort fit hoodie">
+      <label>Image URL</label><input id="staffCreateClothesImage" value="https://example.com/hoodie.jpg">
+      <div class="row">
+        <div><label>Sizes (comma separated)</label><input id="staffCreateClothesSizes" value="S,M,L"></div>
+        <div><label>Colors (comma separated)</label><input id="staffCreateClothesColors" value="Red,Blue,Black"></div>
+      </div>
+      <div><label>Default Stock per Variant</label><input id="staffCreateClothesStock" type="number" value="20"></div>
+      <button onclick="staffCreateClothes()">Add Clothes</button>
+    </section>
+
+    <section id="staffClothesEditPage" class="panel hidden">
+      <div class="section-head">
+        <h2>Edit Clothes</h2>
+        <button class="btn-soft" onclick="go(event, '/staff-clothes')">Back To List</button>
+      </div>
+      <input id="staffEditClothesId" type="hidden">
+      <div class="row">
+        <div>
+          <label>Name</label><input id="staffEditClothesName">
+        </div>
+        <div>
+          <label>Price</label><input id="staffEditClothesPrice">
+        </div>
+      </div>
+      <label>Description</label><input id="staffEditClothesDescription">
+      <label>Image URL</label><input id="staffEditClothesImage">
+      <div class="row">
+        <div><label>Sizes (comma separated)</label><input id="staffEditClothesSizes"></div>
+        <div><label>Colors (comma separated)</label><input id="staffEditClothesColors"></div>
+      </div>
+      <div><label>Default Stock for New Variants</label><input id="staffEditClothesStock" type="number" value="20"></div>
+      <button onclick="staffUpdateClothes()">Save Changes</button>
+      <button class="btn-danger" onclick="staffDeleteClothesFromEdit()">Delete This Clothes</button>
+    </section>
+
     <section id="orderPage" class="panel hidden">
       <div class="section-head">
         <h2>Your Orders</h2>
@@ -475,21 +562,25 @@
     user: JSON.parse(localStorage.getItem("demo_user") || "null"),
     cartId: null,
     books: [],
+    clothes: [],
     cartItems: [],
     orders: [],
     orderDetail: null,
     selectedItemIds: new Set(),
     staffBooks: [],
+    staffClothes: [],
     ratings: [],
     purchasedBookIds: new Set(),
     bookSearch: "",
+    clothesSearch: "",
     bookPage: 1,
     bookPageSize: 12,
+    clothesDetail: null,
   };
 
   const pages = [
-    "loginPage", "registerPage", "booksPage", "bookDetailPage",
-    "cartPage", "staffPage", "staffCreatePage", "staffEditPage", "orderPage", "orderDetailPage"
+    "loginPage", "registerPage", "booksPage", "clothesPage", "bookDetailPage", "clothesDetailPage",
+    "cartPage", "staffPage", "staffCreatePage", "staffEditPage", "staffClothesPage", "staffClothesCreatePage", "staffClothesEditPage", "orderPage", "orderDetailPage"
   ];
 
   function notify(message, ok = true) {
@@ -526,12 +617,21 @@
     return /^\/book-\d+$/.test(path);
   }
 
+  function isClothesDetailPath(path) {
+    return /^\/clothes-\d+$/.test(path);
+  }
+
   function isOrderDetailPath(path) {
     return /^\/order-\d+$/.test(path);
   }
 
   function getBookIdFromPath(path) {
     const m = path.match(/^\/book-(\d+)$/);
+    return m ? Number(m[1]) : null;
+  }
+
+  function getClothesIdFromPath(path) {
+    const m = path.match(/^\/clothes-(\d+)$/);
     return m ? Number(m[1]) : null;
   }
 
@@ -546,6 +646,15 @@
 
   function getStaffEditBookId(path) {
     const m = path.match(/^\/staff-books\/(\d+)\/edit$/);
+    return m ? Number(m[1]) : null;
+  }
+
+  function isStaffClothesEditPath(path) {
+    return /^\/staff-clothes\/\d+\/edit$/.test(path);
+  }
+
+  function getStaffEditClothesId(path) {
+    const m = path.match(/^\/staff-clothes\/(\d+)\/edit$/);
     return m ? Number(m[1]) : null;
   }
 
@@ -572,13 +681,15 @@
     const links = [
       { path: "/", label: "Home" },
       { path: "/books", label: "Books" },
+      { path: "/clothes", label: "Clothes" },
     ];
 
     if (!state.user) {
       links.push({ path: "/login", label: "Login" });
       links.push({ path: "/register", label: "Register" });
     } else if (state.user.role === "STAFF") {
-      links.push({ path: "/staff-books", label: "Staff" });
+      links.push({ path: "/staff-books", label: "Staff Books" });
+      links.push({ path: "/staff-clothes", label: "Staff Clothes" });
       links.push({ action: "logout", label: "Logout" });
     } else {
       links.push({ path: "/cart", label: "Cart" });
@@ -598,14 +709,24 @@
     state.books = await api("/book/books/");
   }
 
+  async function ensureClothes() {
+    state.clothes = await api("/clothes/clothes/");
+  }
+
   async function ensureCartMeta() {
     if (!state.user || state.user.role !== "CUSTOMER") return;
     try {
       const cart = await api(`/cart/carts/customer/${state.user.id}/`);
       state.cartId = cart.id;
     } catch {
-      state.cartId = null;
+      try {
+        const created = await api("/cart/carts/", "POST", { customer_id: state.user.id });
+        state.cartId = created.id;
+      } catch {
+        state.cartId = null;
+      }
     }
+    updateSessionChips();
   }
 
   function renderBooks() {
@@ -686,6 +807,154 @@
   function changeBookPage(delta) {
     state.bookPage += delta;
     renderBooks();
+  }
+
+  function onClothesSearchChange() {
+    state.clothesSearch = document.getElementById("clothesSearch").value.trim();
+    renderClothes();
+  }
+
+  function renderClothes() {
+    const filteredClothes = state.clothes.filter((item) =>
+      String(item.name || "").toLowerCase().includes(state.clothesSearch.toLowerCase())
+    );
+
+    document.getElementById("clothesCountChip").textContent = `${filteredClothes.length} Items`;
+    document.getElementById("clothesSearch").value = state.clothesSearch;
+
+    const wrap = document.getElementById("clothesGrid");
+    if (!filteredClothes.length) {
+      wrap.innerHTML = '<div class="book-card"><p class="muted">No clothes available.</p></div>';
+      return;
+    }
+
+    wrap.innerHTML = filteredClothes.map((item) => `
+      <article class="book-card">
+        <div class="book-cover">${String(item.name).slice(0, 1).toUpperCase()}</div>
+        <h3 class="book-title">${item.name}</h3>
+        <p class="book-meta">Variants: ${item.variants_count ?? 0}</p>
+        <p class="book-price">${Number(item.price).toFixed(2)}</p>
+        <div class="book-actions">
+          <button class="btn-soft" onclick="go(event, '/clothes-${item.id}')">View Detail</button>
+        </div>
+      </article>
+    `).join("");
+  }
+
+  async function renderClothesDetail(clothesId) {
+    const wrap = document.getElementById("clothesDetailWrap");
+    try {
+      const item = await api(`/clothes/clothes/${clothesId}/`);
+      state.clothesDetail = item;
+      const variants = item.variants || [];
+      const sizes = item.sizes || [...new Set(variants.map((v) => v.size))];
+      const colors = item.colors || [...new Set(variants.map((v) => v.color))];
+      wrap.innerHTML = `
+        <h3>${item.name}</h3>
+        <p class="book-price">${Number(item.price).toFixed(2)}</p>
+        <p class="muted">${item.description || "No description"}</p>
+        <div class="row" style="margin-top:10px;">
+          <div>
+            <label>Size</label>
+            <select id="clothesDetailSize" onchange="updateClothesVariantHint()">
+              ${sizes.map((s) => `<option value="${s}">${s}</option>`).join("")}
+            </select>
+          </div>
+          <div>
+            <label>Color</label>
+            <select id="clothesDetailColor" onchange="updateClothesVariantHint()">
+              ${colors.map((c) => `<option value="${c}">${c}</option>`).join("")}
+            </select>
+          </div>
+          <div>
+            <label>Quantity</label>
+            <input id="clothesDetailQty" type="number" min="1" value="1">
+          </div>
+        </div>
+        <button style="margin-top:10px;" onclick="addClothesToCart(${clothesId})">Add To Cart</button>
+        <p class="muted" style="margin-top:8px;" id="clothesVariantHint"></p>
+        <div style="margin-top:14px;">
+          <h3>Available Variants</h3>
+          <div class="list" style="margin-top:8px;">
+            ${variants.length ? variants.map((v) => `
+              <div class="cart-row" style="grid-template-columns: 1fr 1fr 120px;">
+                <div><b>Size:</b> ${v.size}</div>
+                <div><b>Color:</b> ${v.color}</div>
+                <div><b>Stock:</b> ${v.stock}</div>
+              </div>
+            `).join("") : '<div class="cart-row"><div class="muted">No variants available.</div></div>'}
+          </div>
+        </div>
+      `;
+      updateClothesVariantHint();
+    } catch {
+      state.clothesDetail = null;
+      wrap.innerHTML = '<p class="muted">Clothes not found.</p>';
+    }
+  }
+
+  function findSelectedClothesVariant() {
+    const detail = state.clothesDetail;
+    if (!detail) return null;
+    const sizeEl = document.getElementById("clothesDetailSize");
+    const colorEl = document.getElementById("clothesDetailColor");
+    if (!sizeEl || !colorEl) return null;
+    const size = sizeEl.value;
+    const color = colorEl.value;
+    return (detail.variants || []).find((v) =>
+      String(v.size).toLowerCase() === String(size).toLowerCase()
+      && String(v.color).toLowerCase() === String(color).toLowerCase()
+    ) || null;
+  }
+
+  function updateClothesVariantHint() {
+    const hint = document.getElementById("clothesVariantHint");
+    if (!hint) return;
+    const variant = findSelectedClothesVariant();
+    if (!variant) {
+      hint.textContent = "Selected size/color is unavailable.";
+      return;
+    }
+    hint.textContent = `Variant #${variant.id} - Stock: ${variant.stock}`;
+  }
+
+  async function addClothesToCart(clothesId) {
+    try {
+      if (!state.user || state.user.role !== "CUSTOMER") {
+        notify("Please login as CUSTOMER first.", false);
+        return;
+      }
+      if (!state.cartId) {
+        await ensureCartMeta();
+        if (!state.cartId) throw new Error("no-cart");
+      }
+      const sizeEl = document.getElementById("clothesDetailSize");
+      const colorEl = document.getElementById("clothesDetailColor");
+      const qtyEl = document.getElementById("clothesDetailQty");
+      const size = sizeEl ? sizeEl.value : "";
+      const color = colorEl ? colorEl.value : "";
+      const qty = Number(qtyEl ? qtyEl.value : 1);
+      const variant = findSelectedClothesVariant();
+
+      if (!size || !color || !variant) {
+        notify("Please select valid size and color.", false);
+        return;
+      }
+
+      await api("/cart/cart-items/", "POST", {
+        cart: state.cartId,
+        item_type: "CLOTHES",
+        clothes_id: clothesId,
+        clothes_variant_id: variant.id,
+        size,
+        color,
+        quantity: qty,
+      });
+
+      notify("Clothes added to cart.");
+    } catch {
+      notify("Cannot add clothes to cart.", false);
+    }
   }
 
   function ratingFormHtml(bookId) {
@@ -788,7 +1057,7 @@
       <div class="list" style="margin-top:10px;">
         ${items.length ? items.map((it) => `
           <div class="cart-row" style="grid-template-columns: 1.5fr 100px 90px 100px;">
-            <div><b>${it.title || ('Book #' + it.book_id)}</b><br><span class="muted">Book ID: ${it.book_id}</span></div>
+            <div><b>${it.title || ((it.item_type === 'CLOTHES' ? 'Clothes #' + (it.clothes_id || '-') : 'Book #' + (it.book_id || '-')))}</b><br><span class="muted">Type: ${it.item_type || 'BOOK'}</span></div>
             <div>Price: ${Number(it.unit_price).toFixed(2)}</div>
             <div>Qty: ${it.quantity}</div>
             <div>Sub: ${Number(it.subtotal).toFixed(2)}</div>
@@ -812,6 +1081,7 @@
       const qty = Number(document.getElementById(inputId).value || 1);
       await api("/cart/cart-items/", "POST", {
         cart: state.cartId,
+        item_type: "BOOK",
         book_id: bookId,
         quantity: qty,
       });
@@ -823,7 +1093,17 @@
 
   async function loadCart() {
     if (!state.user || state.user.role !== "CUSTOMER") return;
-    const items = await api(`/cart/carts/${state.user.id}/`);
+    let items = [];
+    try {
+      items = await api(`/cart/carts/${state.user.id}/`);
+    } catch {
+      await ensureCartMeta();
+      try {
+        items = await api(`/cart/carts/${state.user.id}/`);
+      } catch {
+        items = [];
+      }
+    }
     state.cartItems = items;
     if (!state.selectedItemIds.size) {
       items.forEach((i) => state.selectedItemIds.add(i.id));
@@ -835,8 +1115,14 @@
     let total = 0;
     state.cartItems.forEach((i) => {
       if (!state.selectedItemIds.has(i.id)) return;
-      const b = state.books.find((x) => x.id === i.book_id);
-      const price = b ? Number(b.price) : 0;
+      let price = 0;
+      if ((i.item_type || "BOOK") === "BOOK") {
+        const b = state.books.find((x) => x.id === i.book_id);
+        price = b ? Number(b.price) : 0;
+      } else {
+        const c = state.clothes.find((x) => x.id === i.clothes_id);
+        price = c ? Number(c.price) : 0;
+      }
       total += price * Number(i.quantity);
     });
     return total;
@@ -851,15 +1137,21 @@
     }
 
     wrap.innerHTML = state.cartItems.map((i) => {
-      const b = state.books.find((x) => x.id === i.book_id);
-      const price = b ? Number(b.price) : 0;
+      const itemType = i.item_type || "BOOK";
+      const b = itemType === "BOOK" ? state.books.find((x) => x.id === i.book_id) : null;
+      const c = itemType === "CLOTHES" ? state.clothes.find((x) => x.id === i.clothes_id) : null;
+      const price = b ? Number(b.price) : (c ? Number(c.price) : 0);
       const subtotal = price * Number(i.quantity);
       const checked = state.selectedItemIds.has(i.id) ? "checked" : "";
+      const itemLabel = itemType === "BOOK"
+        ? (b ? b.title : `Book #${i.book_id}`)
+        : (c ? `${c.name} (${i.size || '-'} / ${i.color || '-'})` : `Clothes #${i.clothes_id}`);
       return `
         <div class="cart-row">
           <input type="checkbox" ${checked} onchange="toggleItem(${i.id}, this.checked)">
           <div>
-            <div><b>${b ? b.title : `Book #${i.book_id}`}</b></div>
+            <div><b>${itemLabel}</b></div>
+            <div class="muted">Type: ${itemType}</div>
             <div class="muted">Qty: ${i.quantity}</div>
           </div>
           <div>Price: ${price.toFixed(2)}</div>
@@ -907,12 +1199,31 @@
       const selectedItems = state.cartItems
         .filter((x) => state.selectedItemIds.has(x.id))
         .map((x) => {
-          const b = state.books.find((bk) => bk.id === x.book_id);
-          const unitPrice = b ? Number(b.price) : 0;
+          const itemType = x.item_type || "BOOK";
+          if (itemType === "BOOK") {
+            const b = state.books.find((bk) => bk.id === x.book_id);
+            const unitPrice = b ? Number(b.price) : 0;
+            return {
+              cart_item_id: x.id,
+              item_type: "BOOK",
+              book_id: x.book_id,
+              title: b ? b.title : `Book #${x.book_id}`,
+              unit_price: unitPrice.toFixed(2),
+              quantity: Number(x.quantity),
+              subtotal: (unitPrice * Number(x.quantity)).toFixed(2),
+            };
+          }
+
+          const c = state.clothes.find((cl) => cl.id === x.clothes_id);
+          const unitPrice = c ? Number(c.price) : 0;
           return {
             cart_item_id: x.id,
-            book_id: x.book_id,
-            title: b ? b.title : `Book #${x.book_id}`,
+            item_type: "CLOTHES",
+            clothes_id: x.clothes_id,
+            clothes_variant_id: x.clothes_variant_id,
+            size: x.size,
+            color: x.color,
+            title: c ? `${c.name} (${x.size || '-'} / ${x.color || '-'})` : `Clothes #${x.clothes_id}`,
             unit_price: unitPrice.toFixed(2),
             quantity: Number(x.quantity),
             subtotal: (unitPrice * Number(x.quantity)).toFixed(2),
@@ -970,6 +1281,12 @@
     renderStaffBooks();
   }
 
+  async function loadStaffClothes() {
+    const clothes = await api("/clothes/clothes/");
+    state.staffClothes = clothes;
+    renderStaffClothes();
+  }
+
   function renderStaffBooks() {
     const wrap = document.getElementById("staffBookList");
     const books = state.staffBooks || [];
@@ -989,6 +1306,24 @@
       : '<div class="cart-row"><div class="muted">No books available.</div></div>';
   }
 
+  function renderStaffClothes() {
+    const wrap = document.getElementById("staffClothesList");
+    const clothes = state.staffClothes || [];
+    wrap.innerHTML = clothes.length
+      ? clothes.map((c) => `
+          <div class="cart-row" style="grid-template-columns: 1.8fr 110px 90px 190px;">
+            <div><b>${c.name}</b><br><span class="muted">Variants: ${c.variants_count ?? 0}</span></div>
+            <div>Price: ${Number(c.price).toFixed(2)}</div>
+            <div>ID: ${c.id}</div>
+            <div class="action-group">
+              <button class="btn-soft" onclick="go(event, '/staff-clothes/${c.id}/edit')">Edit</button>
+              <button class="btn-danger" onclick="staffDeleteClothes(${c.id})">Delete</button>
+            </div>
+          </div>
+        `).join("")
+      : '<div class="cart-row"><div class="muted">No clothes available.</div></div>';
+  }
+
   async function loadStaffBookForEdit(bookId) {
     const b = await api(`/staff/staff/books/${bookId}/`);
     document.getElementById("staffEditBookId").value = b.id;
@@ -996,6 +1331,25 @@
     document.getElementById("staffEditAuthor").value = b.author || "";
     document.getElementById("staffEditPrice").value = b.price || "";
     document.getElementById("staffEditStock").value = b.stock ?? 0;
+  }
+
+  async function loadStaffClothesForEdit(clothesId) {
+    const c = await api(`/clothes/clothes/${clothesId}/`);
+    document.getElementById("staffEditClothesId").value = c.id;
+    document.getElementById("staffEditClothesName").value = c.name || "";
+    document.getElementById("staffEditClothesPrice").value = c.price || "";
+    document.getElementById("staffEditClothesDescription").value = c.description || "";
+    document.getElementById("staffEditClothesImage").value = c.image_url || "";
+    document.getElementById("staffEditClothesSizes").value = (c.sizes || []).join(",");
+    document.getElementById("staffEditClothesColors").value = (c.colors || []).join(",");
+    document.getElementById("staffEditClothesStock").value = 20;
+  }
+
+  function parseCsvValues(text) {
+    return String(text || "")
+      .split(",")
+      .map((s) => s.trim())
+      .filter((s) => s.length > 0);
   }
 
   async function submitBookRating(bookId) {
@@ -1081,6 +1435,68 @@
     go(null, "/staff-books");
   }
 
+  async function staffCreateClothes() {
+    try {
+      await api("/clothes/clothes/", "POST", {
+        name: document.getElementById("staffCreateClothesName").value,
+        description: document.getElementById("staffCreateClothesDescription").value,
+        price: document.getElementById("staffCreateClothesPrice").value,
+        image_url: document.getElementById("staffCreateClothesImage").value,
+        sizes: parseCsvValues(document.getElementById("staffCreateClothesSizes").value),
+        colors: parseCsvValues(document.getElementById("staffCreateClothesColors").value),
+        default_stock: Number(document.getElementById("staffCreateClothesStock").value || 0),
+      });
+      await ensureClothes();
+      renderClothes();
+      await loadStaffClothes();
+      notify("Clothes created.");
+      go(null, "/staff-clothes");
+    } catch {
+      notify("Create clothes failed.", false);
+    }
+  }
+
+  async function staffUpdateClothes() {
+    try {
+      const clothesId = Number(document.getElementById("staffEditClothesId").value);
+      await api(`/clothes/clothes/${clothesId}/`, "PUT", {
+        name: document.getElementById("staffEditClothesName").value,
+        description: document.getElementById("staffEditClothesDescription").value,
+        price: document.getElementById("staffEditClothesPrice").value,
+        image_url: document.getElementById("staffEditClothesImage").value,
+        sizes: parseCsvValues(document.getElementById("staffEditClothesSizes").value),
+        colors: parseCsvValues(document.getElementById("staffEditClothesColors").value),
+        default_stock: Number(document.getElementById("staffEditClothesStock").value || 0),
+      });
+      await ensureClothes();
+      renderClothes();
+      await loadStaffClothes();
+      notify("Clothes updated.");
+      go(null, "/staff-clothes");
+    } catch {
+      notify("Update clothes failed.", false);
+    }
+  }
+
+  async function staffDeleteClothes(clothesId) {
+    try {
+      if (!confirm("Delete this clothes?")) return;
+      await api(`/clothes/clothes/${clothesId}/`, "DELETE");
+      await ensureClothes();
+      renderClothes();
+      await loadStaffClothes();
+      notify("Clothes deleted.");
+    } catch {
+      notify("Delete clothes failed.", false);
+    }
+  }
+
+  async function staffDeleteClothesFromEdit() {
+    const clothesId = Number(document.getElementById("staffEditClothesId").value);
+    await staffDeleteClothes(clothesId);
+    go(null, "/staff-clothes");
+  }
+
   async function registerUser() {
     try {
       const email = document.getElementById("regEmail").value.trim() || `user_${Date.now()}@example.com`;
@@ -1150,9 +1566,19 @@
       await ensureBooks();
     }
 
+    if (!state.clothes.length) {
+      await ensureClothes();
+    }
+
     if (path === "/" || path === "/books") {
       document.getElementById("booksPage").classList.remove("hidden");
       renderBooks();
+      return;
+    }
+
+    if (path === "/clothes") {
+      document.getElementById("clothesPage").classList.remove("hidden");
+      renderClothes();
       return;
     }
 
@@ -1163,6 +1589,12 @@
       await ensureRatings();
       document.getElementById("bookDetailPage").classList.remove("hidden");
       renderBookDetail(getBookIdFromPath(path));
+      return;
+    }
+
+    if (isClothesDetailPath(path)) {
+      document.getElementById("clothesDetailPage").classList.remove("hidden");
+      await renderClothesDetail(getClothesIdFromPath(path));
       return;
     }
 
@@ -1239,6 +1671,17 @@
       return;
     }
 
+    if (path === "/staff-clothes") {
+      if (!state.user || state.user.role !== "STAFF") {
+        notify("Only STAFF can access this page.", false);
+        go(null, "/login");
+        return;
+      }
+      await loadStaffClothes();
+      document.getElementById("staffClothesPage").classList.remove("hidden");
+      return;
+    }
+
     if (path === "/staff-books/new") {
       if (!state.user || state.user.role !== "STAFF") {
         notify("Only STAFF can access this page.", false);
@@ -1246,6 +1689,16 @@
         return;
       }
       document.getElementById("staffCreatePage").classList.remove("hidden");
+      return;
+    }
+
+    if (path === "/staff-clothes/new") {
+      if (!state.user || state.user.role !== "STAFF") {
+        notify("Only STAFF can access this page.", false);
+        go(null, "/login");
+        return;
+      }
+      document.getElementById("staffClothesCreatePage").classList.remove("hidden");
       return;
     }
 
@@ -1267,6 +1720,28 @@
       } catch {
         notify("Cannot load book for editing.", false);
         go(null, "/staff-books");
+      }
+      return;
+    }
+
+    if (isStaffClothesEditPath(path)) {
+      if (!state.user || state.user.role !== "STAFF") {
+        notify("Only STAFF can access this page.", false);
+        go(null, "/login");
+        return;
+      }
+      const clothesId = getStaffEditClothesId(path);
+      if (!clothesId) {
+        notify("Invalid clothes id.", false);
+        go(null, "/staff-clothes");
+        return;
+      }
+      try {
+        await loadStaffClothesForEdit(clothesId);
+        document.getElementById("staffClothesEditPage").classList.remove("hidden");
+      } catch {
+        notify("Cannot load clothes for editing.", false);
+        go(null, "/staff-clothes");
       }
       return;
     }

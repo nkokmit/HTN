@@ -47,9 +47,15 @@ class RatingListCreate(APIView):
         purchased = False
         for order in order_resp.json():
             for item in order.get('items', []):
-                if int(item.get('book_id', 0)) == int(book_id):
-                    purchased = True
-                    break
+                item_book_id = item.get('book_id')
+                if item_book_id is None:
+                    continue
+                try:
+                    if int(item_book_id) == int(book_id):
+                        purchased = True
+                        break
+                except (TypeError, ValueError):
+                    continue
             if purchased:
                 break
 
