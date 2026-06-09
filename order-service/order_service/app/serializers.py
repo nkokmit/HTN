@@ -3,9 +3,14 @@ from .models import *
 
 
 class OrderItemSerializer(serializers.ModelSerializer):
+    subtotal = serializers.SerializerMethodField()
+    
     class Meta:
         model = OrderItem
-        fields = '__all__'
+        fields = ['id','order','product_id','product_type','title','unit_price','quantity','subtotal']
+    
+    def get_subtotal(self, obj):
+        return obj.subtotal
 
 
 class OrderSerializer(serializers.ModelSerializer):

@@ -1,0 +1,221 @@
+@startuml
+title E-commerce System - ORM Datamodel
+
+skinparam classAttributeIconSize 0
+skinparam classBackgroundColor #8ecae6
+skinparam classBorderColor #2b6f9e
+skinparam ArrowColor #666666
+hide methods
+
+package "user-service" {
+  class UserAccount <<ORM Persistable>> {
+    -ID : int
+    -id : int
+    -name : String
+    -email : String
+    -password : String
+    -role : String
+  }
+
+  class StaffAction <<ORM Persistable>> {
+    -ID : int
+    -id : int
+    -product_id : int
+    -action : String
+    -note : String
+  }
+
+  class ManagerNote <<ORM Persistable>> {
+    -ID : int
+    -id : int
+    -title : String
+    -body : Text
+  }
+}
+
+package "product-service" {
+  class Category <<ORM Persistable>> {
+    -ID : int
+    -id : int
+    -name : String
+  }
+
+  class Product <<ORM Persistable>> {
+    -ID : int
+    -id : int
+    -name : String
+    -price : decimal
+    -stock : int
+    -category_id : int
+  }
+
+  class Book <<ORM Persistable>> {
+    -ID : int
+    -id : int
+    -product_id : int
+    -author : String
+    -publisher : String
+    -isbn : String
+  }
+
+  class Electronics <<ORM Persistable>> {
+    -ID : int
+    -id : int
+    -product_id : int
+    -brand : String
+    -warranty : int
+  }
+
+  class Fashion <<ORM Persistable>> {
+    -ID : int
+    -id : int
+    -product_id : int
+    -size : String
+    -color : String
+  }
+
+  class Home <<ORM Persistable>> {
+    -ID : int
+    -id : int
+    -product_id : int
+    -material : String
+    -brand : String
+    -feature : String
+  }
+
+  class Toy <<ORM Persistable>> {
+    -ID : int
+    -id : int
+    -product_id : int
+    -age_range : String
+    -material : String
+    -safety_note : String
+  }
+
+  class Health <<ORM Persistable>> {
+    -ID : int
+    -id : int
+    -product_id : int
+    -usage : String
+    -origin : String
+    -note : String
+  }
+}
+
+package "cart-service" {
+  class Cart <<ORM Persistable>> {
+    -ID : int
+    -id : int
+    -customer_id : int
+    -created_at : DateTime
+    -updated_at : DateTime
+  }
+
+  class CartItem <<ORM Persistable>> {
+    -ID : int
+    -id : int
+    -cart_id : int
+    -product_id : int
+    -unit_price : decimal
+    -quantity : int
+  }
+}
+
+package "order-service" {
+  class Order <<ORM Persistable>> {
+    -ID : int
+    -id : int
+    -user_id : int
+    -status : String
+    -total_amount : decimal
+    -shipping_address : Text
+    -shipping_phone : String
+    -shipping_city : String
+    -note : Text
+    -created_at : DateTime
+    -updated_at : DateTime
+  }
+
+  class OrderItem <<ORM Persistable>> {
+    -ID : int
+    -id : int
+    -order_id : int
+    -product_id : int
+    -quantity : int
+    -unit_price : decimal
+    -sub_total : decimal
+  }
+}
+
+package "pay-service" {
+  class Payment <<ORM Persistable>> {
+    -ID : int
+    -id : int
+    -order_id : int
+    -method : String
+    -amount : decimal
+    -status : String
+    -created_at : DateTime
+  }
+}
+
+package "ship-service" {
+  class Shipment <<ORM Persistable>> {
+    -ID : int
+    -id : int
+    -order_id : int
+    -method : String
+    -address : Text
+    -status : String
+    -tracking_number : String
+    -created_at : DateTime
+    -updated_at : DateTime
+  }
+}
+
+package "comment-rate-service" {
+  class Rating <<ORM Persistable>> {
+    -ID : int
+    -id : int
+    -customer_id : int
+    -product_id : int
+    -score : int
+    -comment : String
+  }
+}
+
+package "recommender-ai-service" {
+  class RecommenderProfile <<ORM Persistable>> {
+    -ID : int
+    -id : int
+  }
+}
+
+UserAccount "1" .. "0..1" Cart : customer_id
+UserAccount "1" .. "*" Order : user_id
+
+Category "1" -- "*" Product : category
+Product "1" -- "0..1" Book : book
+Product "1" -- "0..1" Electronics : electronics
+Product "1" -- "0..1" Fashion : fashion
+Product "1" -- "0..1" Home : home
+Product "1" -- "0..1" Toy : toy
+Product "1" -- "0..1" Health : health
+
+Cart "1" -- "*" CartItem : cartitem
+Order "1" -- "*" OrderItem : items
+
+Product ..> CartItem : product_id
+Product ..> OrderItem : product_id
+Product ..> Rating : product_id
+Product ..> StaffAction : product_id
+
+Order ..> Payment : order_id
+Order ..> Shipment : order_id
+
+UserAccount ..> StaffAction : actor / staff action
+UserAccount ..> ManagerNote : admin notes
+RecommenderProfile ..> Product : recommends
+RecommenderProfile ..> Rating : learns from
+
+@enduml

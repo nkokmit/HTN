@@ -4,12 +4,10 @@
 
 ```mermaid
 flowchart LR
-    UI[Web UI via api-gateway] --> GW[api-gateway\nFastAPI + SPA]
-    GW --> CUS[customer-service]
+    UI[Mobile UI route\n/mobile] --> GW[api-gateway\nFastAPI + SPA]
+    GW --> USER[user-service]
     GW --> BOOK[book-service]
     GW --> CART[cart-service]
-    GW --> STAFF[staff-service]
-    GW --> MAN[manager-service]
     GW --> CAT[catalog-service]
     GW --> ORD[order-service]
     GW --> PAY[pay-service]
@@ -17,11 +15,9 @@ flowchart LR
     GW --> RATE[comment-rate-service]
     GW --> REC[recommender-ai-service]
 
-    CUS --> CUSDB[(customer-db)]
+    USER --> USERDB[(user-db)]
     BOOK --> BOOKDB[(book-db)]
     CART --> CARTDB[(cart-db)]
-    STAFF --> STAFFDB[(staff-db)]
-    MAN --> MANDB[(manager-db)]
     CAT --> CATDB[(catalog-db)]
     ORD --> ORDDB[(order-db)]
     PAY --> PAYDB[(pay-db)]
@@ -29,8 +25,8 @@ flowchart LR
     RATE --> RATEDB[(comment-rate-db)]
     REC --> RECDB[(recommender-ai-db)]
 
-    CUS --> CART
-    STAFF --> BOOK
+    USER --> CART
+    USER --> BOOK
     CAT --> BOOK
     CART --> BOOK
     ORD --> PAY
@@ -48,21 +44,23 @@ flowchart TD
     Gateway --> ProxyAPIs[Proxy to backend APIs]
 ```
 
-## 2. customer-service
+## 2. mobile-route
 
 ```mermaid
 flowchart TD
-    Client --> CustomerAPI[customer-service]
-    CustomerAPI --> CustomerDB[(customer-db)]
-    CustomerAPI --> CartAPI[cart-service\nauto create cart on register]
+    PhoneBrowser --> Gateway[api-gateway]
+    Gateway --> MobileSPA[Responsive bookstore UI on /mobile]
 ```
 
-## 3. book-service
+## 3. user-service
 
 ```mermaid
 flowchart TD
-    StaffOrUI[staff-service / UI / catalog] --> BookAPI[book-service]
-    BookAPI --> BookDB[(book-db)]
+    Client --> UserAPI[user-service]
+    UserAPI --> UserDB[(user-db)]
+    UserAPI --> CartAPI[cart-service\nauto create cart for CUSTOMER role]
+    UserAPI --> StaffAPI[catalog-service\nstaff/admin book management]
+    UserAPI --> ManagerAPI[manager notes]
 ```
 
 ## 4. cart-service
@@ -71,36 +69,19 @@ flowchart TD
 flowchart TD
     CustomerUI --> CartAPI[cart-service]
     CartAPI --> CartDB[(cart-db)]
-    CartAPI --> BookAPI[book-service\nvalidate book exists]
+    CartAPI --> BookAPI[catalog-service\nvalidate product exists]
 ```
 
-## 5. staff-service
-
-```mermaid
-flowchart TD
-    StaffUI --> StaffAPI[staff-service]
-    StaffAPI --> StaffDB[(staff-db)]
-    StaffAPI --> BookAPI[book-service\ncreate/update/delete book]
-```
-
-## 6. manager-service
-
-```mermaid
-flowchart TD
-    ManagerUI --> ManagerAPI[manager-service]
-    ManagerAPI --> ManagerDB[(manager-db)]
-```
-
-## 7. catalog-service
+## 5. catalog-service
 
 ```mermaid
 flowchart TD
     UserUI --> CatalogAPI[catalog-service]
     CatalogAPI --> CatalogDB[(catalog-db)]
-    CatalogAPI --> BookAPI[book-service\nread catalog books]
+    CatalogAPI --> ProductAPI[product data]
 ```
 
-## 8. order-service
+## 9. order-service
 
 ```mermaid
 flowchart TD
@@ -111,7 +92,7 @@ flowchart TD
     OrderAPI --> OrderItems[store order detail lines]
 ```
 
-## 9. pay-service
+## 10. pay-service
 
 ```mermaid
 flowchart TD
@@ -119,7 +100,7 @@ flowchart TD
     PayAPI --> PayDB[(pay-db)]
 ```
 
-## 10. ship-service
+## 11. ship-service
 
 ```mermaid
 flowchart TD
@@ -127,7 +108,7 @@ flowchart TD
     ShipAPI --> ShipDB[(ship-db)]
 ```
 
-## 11. comment-rate-service
+## 12. comment-rate-service
 
 ```mermaid
 flowchart TD
@@ -136,7 +117,7 @@ flowchart TD
     RatingAPI --> BookAPI[book-service\nvalidate rated book exists]
 ```
 
-## 12. recommender-ai-service
+## 13. recommender-ai-service
 
 ```mermaid
 flowchart TD

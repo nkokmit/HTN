@@ -1,12 +1,30 @@
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
-from .models import Cart, CartItem
-from .serializers import CartSerializer, CartItemSerializer
-import requests
+from decimal import Decimal
 
-BOOK_SERVICE_URL = "http://book-service:8000"
-CLOTHES_SERVICE_URL = "http://clothes-service:8000"
+import requests
+from django.db import transaction
+from rest_framework import status
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from .models import Cart, CartItem
+from .serializers import CartItemSerializer, CartSerializer
+
+PRODUCT_SERVICE_URL = "http://product-service:8000"
+
+
+def _fetch_product(product_id):
+    try:
+        response = requests.get(f"{PRODUCT_SERVICE_URL}/products/{int(product_id)}/", timeout=5)
+    except (requests.RequestException, ValueError):
+        return None, Response({"error": "Product service unavailable"}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
+    if response.status_code == 404:
+        return None, Response({"error": "Product not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    if response.status_code != 200:
+        return None, Response({"error": "Product service unavailable"}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
+    return response.json(), None
 
 
 class CartCreate(APIView):
@@ -21,14 +39,15 @@ class CartCreate(APIView):
 
 class AddCartItem(APIView):
 
+    @transaction.atomic
     def post(self, request):
-        item_type = str(request.data.get("item_type", "BOOK")).upper()
-        if item_type not in {"BOOK", "CLOTHES"}:
-            return Response({"error": "item_type must be BOOK or CLOTHES"}, status=status.HTTP_400_BAD_REQUEST)
-
         cart_id = request.data.get("cart")
         if not cart_id:
             return Response({"error": "cart is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        product_id = request.data.get("product_id") or request.data.get("book_id") or request.data.get("clothes_id")
+        if not product_id:
+            return Response({"error": "product_id is required"}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
             quantity = int(request.data.get("quantity", 1))
@@ -37,79 +56,29 @@ class AddCartItem(APIView):
         if quantity <= 0:
             return Response({"error": "quantity must be > 0"}, status=status.HTTP_400_BAD_REQUEST)
 
+        product, error_response = _fetch_product(product_id)
+        if error_response is not None:
+            return error_response
+
+        product_stock = int(product.get("stock", 0))
+        if quantity > product_stock:
+            return Response({"error": "quantity exceeds product stock"}, status=status.HTTP_400_BAD_REQUEST)
+
         payload = {
             "cart": cart_id,
-            "item_type": item_type,
+            "product_id": int(product_id),
+            "unit_price": Decimal(str(product.get("price", 0))),
             "quantity": quantity,
         }
 
-        if item_type == "BOOK":
-            book_id = request.data.get("book_id")
-            if not book_id:
-                return Response({"error": "book_id is required for BOOK"}, status=status.HTTP_400_BAD_REQUEST)
-
-            r = requests.get(f"{BOOK_SERVICE_URL}/books/", timeout=5)
-            if r.status_code != 200:
-                return Response({"error": "Book service unavailable"}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
-            books = r.json()
-
-            if not any(int(b["id"]) == int(book_id) for b in books):
-                return Response({"error": "Book not found"}, status=status.HTTP_404_NOT_FOUND)
-
-            payload["book_id"] = int(book_id)
-            existing = CartItem.objects.filter(cart_id=cart_id, item_type="BOOK", book_id=int(book_id)).first()
-        else:
-            clothes_id = request.data.get("clothes_id")
-            size = str(request.data.get("size", "")).strip()
-            color = str(request.data.get("color", "")).strip()
-            if not clothes_id:
-                return Response({"error": "clothes_id is required for CLOTHES"}, status=status.HTTP_400_BAD_REQUEST)
-            if not size or not color:
-                return Response({"error": "size and color are required for CLOTHES"}, status=status.HTTP_400_BAD_REQUEST)
-
-            try:
-                variant_resp = requests.get(
-                    f"{CLOTHES_SERVICE_URL}/clothes/{int(clothes_id)}/variants/",
-                    timeout=5,
-                )
-            except requests.RequestException:
-                return Response({"error": "Clothes service unavailable"}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
-
-            if variant_resp.status_code != 200:
-                return Response({"error": "Clothes not found"}, status=status.HTTP_404_NOT_FOUND)
-
-            variants = variant_resp.json()
-            target_variant = None
-            for variant in variants:
-                if str(variant.get("size", "")).lower() == size.lower() and str(variant.get("color", "")).lower() == color.lower():
-                    target_variant = variant
-                    break
-
-            if not target_variant:
-                return Response({"error": "Variant not found for selected size/color"}, status=status.HTTP_404_NOT_FOUND)
-
-            variant_stock = int(target_variant.get("stock", 0))
-            if quantity > variant_stock:
-                return Response({"error": "quantity exceeds variant stock"}, status=status.HTTP_400_BAD_REQUEST)
-
-            payload.update({
-                "clothes_id": int(clothes_id),
-                "clothes_variant_id": int(target_variant.get("id")),
-                "size": target_variant.get("size"),
-                "color": target_variant.get("color"),
-            })
-            existing = CartItem.objects.filter(
-                cart_id=cart_id,
-                item_type="CLOTHES",
-                clothes_variant_id=int(target_variant.get("id")),
-            ).first()
+        existing = CartItem.objects.filter(cart_id=cart_id, product_id=int(product_id)).first()
 
         if existing:
             new_quantity = existing.quantity + quantity
-            if item_type == "CLOTHES":
-                if new_quantity > variant_stock:
-                    return Response({"error": "quantity exceeds variant stock"}, status=status.HTTP_400_BAD_REQUEST)
+            if new_quantity > product_stock:
+                return Response({"error": "quantity exceeds product stock"}, status=status.HTTP_400_BAD_REQUEST)
             existing.quantity = new_quantity
+            existing.unit_price = payload["unit_price"]
             existing.save()
             return Response(CartItemSerializer(existing).data)
 
@@ -126,7 +95,7 @@ class ViewCart(APIView):
     def get(self, request, customer_id):
         cart, _ = Cart.objects.get_or_create(customer_id=customer_id)
 
-        items = CartItem.objects.filter(cart=cart)
+        items = CartItem.objects.filter(cart=cart).order_by("id")
         serializer = CartItemSerializer(items, many=True)
         return Response(serializer.data)
 
@@ -152,6 +121,12 @@ class UpdateCartItem(APIView):
                 return Response({"error": "quantity must be an integer"}, status=status.HTTP_400_BAD_REQUEST)
             if new_quantity <= 0:
                 return Response({"error": "quantity must be > 0"}, status=status.HTTP_400_BAD_REQUEST)
+
+            product, error_response = _fetch_product(item.product_id)
+            if error_response is not None:
+                return error_response
+            if new_quantity > int(product.get("stock", 0)):
+                return Response({"error": "quantity exceeds product stock"}, status=status.HTTP_400_BAD_REQUEST)
 
         serializer = CartItemSerializer(item, data=request.data, partial=True)
         if serializer.is_valid():

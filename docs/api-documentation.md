@@ -2,7 +2,8 @@
 
 Base access for browser/app goes through the gateway:
 
-- UI base: http://localhost:8080
+- Mobile UI route: http://localhost:8080/mobile
+- Gateway UI base: http://localhost:8080
 - API gateway prefixes:
   - /book
   - /customer
@@ -16,10 +17,10 @@ Base access for browser/app goes through the gateway:
   - /rating
   - /recommender
 
-## customer-service
+## user-service
 
-### POST /customer/auth/register/
-Register new customer. UI registration always uses CUSTOMER role.
+### POST /user/auth/register/
+Register a new user. If `role` is omitted, the service defaults to `CUSTOMER`.
 
 Request:
 ```json
@@ -44,7 +45,7 @@ Behavior:
 - Automatically creates cart via cart-service.
 - Registration fails if cart creation fails.
 
-### POST /customer/auth/login/
+### POST /user/auth/login/
 Request:
 ```json
 {
@@ -66,11 +67,17 @@ Response 200:
 }
 ```
 
-### GET /customer/customers/
-List customers.
+### GET /user/users/
+List all users.
 
-### POST /customer/customers/
-Create customer directly.
+### POST /user/users/
+Create a user directly.
+
+### GET /user/customers/
+List users with `CUSTOMER` role.
+
+### POST /user/customers/
+Create a `CUSTOMER` user directly.
 
 ## book-service
 
@@ -115,13 +122,24 @@ Replace book data.
 ### DELETE /book/books/{book_id}/
 Delete book.
 
-## staff-service
+### GET /user/health/
+Health check for the consolidated user service.
+
+## Legacy gateway prefixes
+
+The gateway still accepts these prefixes and forwards them to `user-service` for backward compatibility:
+
+- `/customer`
+- `/staff`
+- `/manager`
+
+## user-service staff APIs
 
 ### GET /staff/staff/books/
-List books through staff-service.
+List books through `user-service`.
 
 ### POST /staff/staff/books/
-Create book via staff-service.
+Create book through `user-service`.
 
 Request:
 ```json
@@ -137,7 +155,7 @@ Request:
 ```
 
 ### PATCH /staff/staff/books/{book_id}/
-Update book via staff-service.
+Update book through `user-service`.
 
 Request:
 ```json
@@ -148,7 +166,15 @@ Request:
 ```
 
 ### DELETE /staff/staff/books/{book_id}/
-Delete book via staff-service.
+Delete book through `user-service`.
+
+## user-service manager APIs
+
+### GET /manager/manager/notes/
+List manager notes.
+
+### POST /manager/manager/notes/
+Create manager note.
 
 ## cart-service
 
@@ -364,7 +390,7 @@ Validation:
 ### GET /catalog/catalog/books/
 Read catalog books from book-service.
 
-## manager-service
+## user-service manager APIs
 
 ### GET /manager/manager/notes/
 List manager notes.
@@ -391,3 +417,5 @@ These are browser routes served by `api-gateway`:
 - /order-{id}
 - /ratings
 - /staff-books
+
+The mobile UI is rendered from the gateway SPA on the `/mobile` route.

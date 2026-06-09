@@ -1,71 +1,69 @@
+x-postgres-healthcheck: &postgres-healthcheck
+  test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+  interval: 5s
+  timeout: 5s
+  retries: 10
+  start_period: 5s
+
 services:
+  frontend:
+    build: ./frontend
+    container_name: frontend
+    ports:
+      - "3000:80"
+
   api-gateway:
     build: ./api-gateway
     container_name: api-gateway
     ports:
       - "8080:8000"
     depends_on:
-      - book-service
-      - customer-service
-      - cart-service
-      - staff-service
-      - manager-service
-      - catalog-service
-      - order-service
-      - ship-service
-      - pay-service
-      - comment-rate-service
-      - recommender-ai-service
-      - clothes-service
+      frontend:
+        condition: service_started
+      user-service:
+        condition: service_started
+      cart-service:
+        condition: service_started
+      product-service:
+        condition: service_started
+      order-service:
+        condition: service_started
+      ship-service:
+        condition: service_started
+      pay-service:
+        condition: service_started
+      comment-rate-service:
+        condition: service_started
+      recommender-ai-service:
+        condition: service_started
 
-  book-service:
-    build: ./book-service
-    container_name: book-service
+  user-service:
+    build: ./user-service
+    container_name: user-service
     environment:
-      POSTGRES_DB: book_db
-      POSTGRES_USER: book_user
-      POSTGRES_PASSWORD: book_pass
-      POSTGRES_HOST: book-db
+      POSTGRES_DB: user_db
+      POSTGRES_USER: user_user
+      POSTGRES_PASSWORD: user_pass
+      POSTGRES_HOST: user-db
       POSTGRES_PORT: 5432
     depends_on:
-      - book-db
-    ports:
-      - "8001:8000"
-
-  book-db:
-    image: postgres:16-alpine
-    container_name: book-db
-    environment:
-      POSTGRES_DB: book_db
-      POSTGRES_USER: book_user
-      POSTGRES_PASSWORD: book_pass
-    volumes:
-      - book_db_data:/var/lib/postgresql/data
-
-  customer-service:
-    build: ./customer-service
-    container_name: customer-service
-    environment:
-      POSTGRES_DB: customer_db
-      POSTGRES_USER: customer_user
-      POSTGRES_PASSWORD: customer_pass
-      POSTGRES_HOST: customer-db
-      POSTGRES_PORT: 5432
-    depends_on:
-      - customer-db
-      - cart-service
+      user-db:
+        condition: service_healthy
+      cart-service:
+        condition: service_started
     ports:
       - "8002:8000"
 
-  customer-db:
+  user-db:
     image: postgres:16-alpine
-    container_name: customer-db
+    container_name: user-db
     environment:
-      POSTGRES_DB: customer_db
-      POSTGRES_USER: customer_user
-      POSTGRES_PASSWORD: customer_pass
+      POSTGRES_DB: user_db
+      POSTGRES_USER: user_user
+      POSTGRES_PASSWORD: user_pass
     volumes:
-      - customer_db_data:/var/lib/postgresql/data
+      - user_db_data:/var/lib/postgresql/data
+    healthcheck: *postgres-healthcheck
 
   cart-service:
     build: ./cart-service
@@ -77,8 +75,10 @@ services:
       POSTGRES_HOST: cart-db
       POSTGRES_PORT: 5432
     depends_on:
-      - cart-db
-      - book-service
+      cart-db:
+        condition: service_healthy
+      product-service:
+        condition: service_started
     ports:
       - "8003:8000"
 
@@ -91,80 +91,33 @@ services:
       POSTGRES_PASSWORD: cart_pass
     volumes:
       - cart_db_data:/var/lib/postgresql/data
+    healthcheck: *postgres-healthcheck
 
-  staff-service:
-    build: ./staff-service
-    container_name: staff-service
+  product-service:
+    build: ./product-service
+    container_name: product-service
     environment:
-      POSTGRES_DB: staff_db
-      POSTGRES_USER: staff_user
-      POSTGRES_PASSWORD: staff_pass
-      POSTGRES_HOST: staff-db
+      POSTGRES_DB: product_db
+      POSTGRES_USER: product_user
+      POSTGRES_PASSWORD: product_pass
+      POSTGRES_HOST: product-db
       POSTGRES_PORT: 5432
     depends_on:
-      - staff-db
-      - book-service
-    ports:
-      - "8004:8000"
-
-  staff-db:
-    image: postgres:16-alpine
-    container_name: staff-db
-    environment:
-      POSTGRES_DB: staff_db
-      POSTGRES_USER: staff_user
-      POSTGRES_PASSWORD: staff_pass
-    volumes:
-      - staff_db_data:/var/lib/postgresql/data
-
-  manager-service:
-    build: ./manager-service
-    container_name: manager-service
-    environment:
-      POSTGRES_DB: manager_db
-      POSTGRES_USER: manager_user
-      POSTGRES_PASSWORD: manager_pass
-      POSTGRES_HOST: manager-db
-      POSTGRES_PORT: 5432
-    depends_on:
-      - manager-db
-    ports:
-      - "8005:8000"
-
-  manager-db:
-    image: postgres:16-alpine
-    container_name: manager-db
-    environment:
-      POSTGRES_DB: manager_db
-      POSTGRES_USER: manager_user
-      POSTGRES_PASSWORD: manager_pass
-    volumes:
-      - manager_db_data:/var/lib/postgresql/data
-
-  catalog-service:
-    build: ./catalog-service
-    container_name: catalog-service
-    environment:
-      POSTGRES_DB: catalog_db
-      POSTGRES_USER: catalog_user
-      POSTGRES_PASSWORD: catalog_pass
-      POSTGRES_HOST: catalog-db
-      POSTGRES_PORT: 5432
-    depends_on:
-      - catalog-db
-      - book-service
+      product-db:
+        condition: service_healthy
     ports:
       - "8006:8000"
 
-  catalog-db:
+  product-db:
     image: postgres:16-alpine
-    container_name: catalog-db
+    container_name: product-db
     environment:
-      POSTGRES_DB: catalog_db
-      POSTGRES_USER: catalog_user
-      POSTGRES_PASSWORD: catalog_pass
+      POSTGRES_DB: product_db
+      POSTGRES_USER: product_user
+      POSTGRES_PASSWORD: product_pass
     volumes:
-      - catalog_db_data:/var/lib/postgresql/data
+      - product_db_data:/var/lib/postgresql/data
+    healthcheck: *postgres-healthcheck
 
   order-service:
     build: ./order-service
@@ -176,9 +129,12 @@ services:
       POSTGRES_HOST: order-db
       POSTGRES_PORT: 5432
     depends_on:
-      - order-db
-      - pay-service
-      - ship-service
+      order-db:
+        condition: service_healthy
+      pay-service:
+        condition: service_started
+      ship-service:
+        condition: service_started
     ports:
       - "8007:8000"
 
@@ -191,6 +147,7 @@ services:
       POSTGRES_PASSWORD: order_pass
     volumes:
       - order_db_data:/var/lib/postgresql/data
+    healthcheck: *postgres-healthcheck
 
   ship-service:
     build: ./ship-service
@@ -202,7 +159,8 @@ services:
       POSTGRES_HOST: ship-db
       POSTGRES_PORT: 5432
     depends_on:
-      - ship-db
+      ship-db:
+        condition: service_healthy
     ports:
       - "8008:8000"
 
@@ -215,6 +173,7 @@ services:
       POSTGRES_PASSWORD: ship_pass
     volumes:
       - ship_db_data:/var/lib/postgresql/data
+    healthcheck: *postgres-healthcheck
 
   pay-service:
     build: ./pay-service
@@ -226,7 +185,8 @@ services:
       POSTGRES_HOST: pay-db
       POSTGRES_PORT: 5432
     depends_on:
-      - pay-db
+      pay-db:
+        condition: service_healthy
     ports:
       - "8009:8000"
 
@@ -239,6 +199,7 @@ services:
       POSTGRES_PASSWORD: pay_pass
     volumes:
       - pay_db_data:/var/lib/postgresql/data
+    healthcheck: *postgres-healthcheck
 
   comment-rate-service:
     build: ./comment-rate-service
@@ -250,7 +211,8 @@ services:
       POSTGRES_HOST: comment-rate-db
       POSTGRES_PORT: 5432
     depends_on:
-      - comment-rate-db
+      comment-rate-db:
+        condition: service_healthy
     ports:
       - "8010:8000"
 
@@ -263,6 +225,7 @@ services:
       POSTGRES_PASSWORD: comment_rate_pass
     volumes:
       - comment_rate_db_data:/var/lib/postgresql/data
+    healthcheck: *postgres-healthcheck
 
   recommender-ai-service:
     build: ./recommender-ai-service
@@ -274,9 +237,12 @@ services:
       POSTGRES_HOST: recommender-ai-db
       POSTGRES_PORT: 5432
     depends_on:
-      - recommender-ai-db
-      - comment-rate-service
-      - book-service
+      recommender-ai-db:
+        condition: service_healthy
+      comment-rate-service:
+        condition: service_started
+      product-service:
+        condition: service_started
     ports:
       - "8011:8000"
 
@@ -289,41 +255,14 @@ services:
       POSTGRES_PASSWORD: recommender_pass
     volumes:
       - recommender_ai_db_data:/var/lib/postgresql/data
-
-  clothes-service:
-    build: ./clothes-service
-    container_name: clothes-service
-    environment:
-      POSTGRES_DB: clothes_db
-      POSTGRES_USER: clothes_user
-      POSTGRES_PASSWORD: clothes_pass
-      POSTGRES_HOST: clothes-db
-      POSTGRES_PORT: 5432
-    depends_on:
-      - clothes-db
-    ports:
-      - "8012:8000"
-
-  clothes-db:
-    image: postgres:16-alpine
-    container_name: clothes-db
-    environment:
-      POSTGRES_DB: clothes_db
-      POSTGRES_USER: clothes_user
-      POSTGRES_PASSWORD: clothes_pass
-    volumes:
-      - clothes_db_data:/var/lib/postgresql/data
+    healthcheck: *postgres-healthcheck
 
 volumes:
-  book_db_data:
-  customer_db_data:
+  user_db_data:
   cart_db_data:
-  staff_db_data:
-  manager_db_data:
-  catalog_db_data:
+  product_db_data:
   order_db_data:
   ship_db_data:
   pay_db_data:
   comment_rate_db_data:
   recommender_ai_db_data:
-  clothes_db_data:

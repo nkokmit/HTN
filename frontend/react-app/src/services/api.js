@@ -1,0 +1,32 @@
+const API_ORIGIN = import.meta.env.VITE_API_ORIGIN || ''
+const CART_API_ORIGIN = import.meta.env.VITE_CART_API_ORIGIN || API_ORIGIN
+const USER_API_ORIGIN = import.meta.env.VITE_USER_API_ORIGIN || API_ORIGIN
+
+export async function request(path, opts = {}, origin = API_ORIGIN){
+  const url = origin + path
+  const headers = Object.assign({'Content-Type':'application/json'}, opts.headers || {})
+  const res = await fetch(url, Object.assign({}, opts, { headers }))
+  if(!res.ok){
+    const text = await res.text()
+    const err = new Error(res.status + ' ' + res.statusText + ' - ' + text)
+    err.status = res.status
+    throw err
+  }
+  const ct = res.headers.get('content-type') || ''
+  if(ct.includes('application/json')) return res.json()
+  return res.text()
+}
+
+export function getApiOrigin(){
+  return API_ORIGIN
+}
+
+export function getCartApiOrigin(){
+  return CART_API_ORIGIN
+}
+
+export function getUserApiOrigin(){
+  return USER_API_ORIGIN
+}
+
+export default { request, getApiOrigin, getCartApiOrigin, getUserApiOrigin }

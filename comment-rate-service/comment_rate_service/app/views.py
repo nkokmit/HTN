@@ -6,7 +6,7 @@ from .serializers import RatingSerializer
 import requests
 
 
-BOOK_SERVICE_URL = 'http://book-service:8000'
+PRODUCT_SERVICE_URL = 'http://product-service:8000'
 ORDER_SERVICE_URL = 'http://order-service:8000'
 
 
@@ -24,17 +24,17 @@ class RatingListCreate(APIView):
         if score < 1 or score > 5:
             return Response({'error': 'score must be between 1 and 5'}, status=status.HTTP_400_BAD_REQUEST)
 
-        book_id = request.data.get('book_id')
-        if not book_id:
-            return Response({'error': 'book_id is required'}, status=status.HTTP_400_BAD_REQUEST)
+        product_id = request.data.get('product_id')
+        if not product_id:
+            return Response({'error': 'product_id is required'}, status=status.HTTP_400_BAD_REQUEST)
 
         customer_id = request.data.get('customer_id')
         if not customer_id:
             return Response({'error': 'customer_id is required'}, status=status.HTTP_400_BAD_REQUEST)
 
-        r = requests.get(f"{BOOK_SERVICE_URL}/books/{book_id}/", timeout=5)
+        r = requests.get(f"{PRODUCT_SERVICE_URL}/products/{product_id}/", timeout=5)
         if r.status_code != 200:
-            return Response({'error': 'Book not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'error': 'Product not found'}, status=status.HTTP_404_NOT_FOUND)
 
         try:
             order_resp = requests.get(f"{ORDER_SERVICE_URL}/orders/", params={'customer_id': customer_id}, timeout=5)
@@ -47,11 +47,11 @@ class RatingListCreate(APIView):
         purchased = False
         for order in order_resp.json():
             for item in order.get('items', []):
-                item_book_id = item.get('book_id')
-                if item_book_id is None:
+                item_prod_id = item.get('product_id') or item.get('book_id')
+                if item_prod_id is None:
                     continue
                 try:
-                    if int(item_book_id) == int(book_id):
+                    if int(item_prod_id) == int(product_id):
                         purchased = True
                         break
                 except (TypeError, ValueError):
@@ -62,7 +62,11 @@ class RatingListCreate(APIView):
         if not purchased:
             return Response({'error': 'You can only rate books you have purchased'}, status=status.HTTP_400_BAD_REQUEST)
 
-        serializer = RatingSerializer(data=request.data)
+        # normalize incoming payload to product_id
+        data = dict(request.data)
+        if 'book_id' in data and 'product_id' not in data:
+            data['product_id'] = data.get('book_id')
+        serializer = RatingSerializer(data=data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)

@@ -6,7 +6,6 @@ COPY requirements.txt ./requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY main.py ./main.py
-COPY index.html ./index.html
 
 EXPOSE 8000
 

@@ -29,27 +29,19 @@ class OrderListCreate(APIView):
         if isinstance(order_items, list):
             for item in order_items:
                 try:
-                    item_type = str(item.get('item_type', 'BOOK')).upper()
-                    if item_type not in {'BOOK', 'CLOTHES'}:
-                        item_type = 'BOOK'
+                    product_id = item.get('product_id')
+                    product_type = item.get('product_type', 'BOOK')
 
-                    raw_book_id = item.get('book_id')
-                    raw_clothes_id = item.get('clothes_id')
-                    raw_variant_id = item.get('clothes_variant_id')
+                    if product_id is None:
+                        continue
 
                     OrderItem.objects.create(
                         order=order,
-                        cart_item_id=item.get('cart_item_id'),
-                        item_type=item_type,
-                        book_id=int(raw_book_id) if raw_book_id is not None else None,
-                        clothes_id=int(raw_clothes_id) if raw_clothes_id is not None else None,
-                        clothes_variant_id=int(raw_variant_id) if raw_variant_id is not None else None,
-                        size=item.get('size', None),
-                        color=item.get('color', None),
+                        product_id=int(product_id),
+                        product_type=product_type,
                         title=item.get('title', ''),
                         unit_price=Decimal(str(item.get('unit_price', 0))),
                         quantity=int(item.get('quantity', 1)),
-                        subtotal=Decimal(str(item.get('subtotal', 0))),
                     )
                 except Exception:
                     continue

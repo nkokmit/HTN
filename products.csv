@@ -1,0 +1,101 @@
+product_id,product_name,category,price
+P001,Điện thoại loại 1,Điện thoại,3750000
+P002,Điện thoại loại 2,Điện thoại,2920000
+P003,Điện thoại loại 3,Điện thoại,1130000
+P004,Điện thoại loại 4,Điện thoại,2680000
+P005,Điện thoại loại 5,Điện thoại,3020000
+P006,Điện thoại loại 6,Điện thoại,4420000
+P007,Điện thoại loại 7,Điện thoại,3220000
+P008,Điện thoại loại 8,Điện thoại,4020000
+P009,Điện thoại loại 9,Điện thoại,2780000
+P010,Điện thoại loại 10,Điện thoại,3730000
+P011,Laptop loại 1,Laptop,2840000
+P012,Laptop loại 2,Laptop,830000
+P013,Laptop loại 3,Laptop,4640000
+P014,Laptop loại 4,Laptop,4830000
+P015,Laptop loại 5,Laptop,2220000
+P016,Laptop loại 6,Laptop,1810000
+P017,Laptop loại 7,Laptop,1490000
+P018,Laptop loại 8,Laptop,4250000
+P019,Laptop loại 9,Laptop,3220000
+P020,Laptop loại 10,Laptop,2870000
+P021,Phụ kiện loại 1,Phụ kiện,3280000
+P022,Phụ kiện loại 2,Phụ kiện,3580000
+P023,Phụ kiện loại 3,Phụ kiện,3270000
+P024,Phụ kiện loại 4,Phụ kiện,3480000
+P025,Phụ kiện loại 5,Phụ kiện,4780000
+P026,Phụ kiện loại 6,Phụ kiện,1060000
+P027,Phụ kiện loại 7,Phụ kiện,900000
+P028,Phụ kiện loại 8,Phụ kiện,720000
+P029,Phụ kiện loại 9,Phụ kiện,1300000
+P030,Phụ kiện loại 10,Phụ kiện,3730000
+P031,Thời trang loại 1,Thời trang,3230000
+P032,Thời trang loại 2,Thời trang,4630000
+P033,Thời trang loại 3,Thời trang,300000
+P034,Thời trang loại 4,Thời trang,4170000
+P035,Thời trang loại 5,Thời trang,850000
+P036,Thời trang loại 6,Thời trang,2650000
+P037,Thời trang loại 7,Thời trang,4330000
+P038,Thời trang loại 8,Thời trang,3640000
+P039,Thời trang loại 9,Thời trang,1370000
+P040,Thời trang loại 10,Thời trang,3320000
+P041,Gia dụng loại 1,Gia dụng,1150000
+P042,Gia dụng loại 2,Gia dụng,2910000
+P043,Gia dụng loại 3,Gia dụng,2790000
+P044,Gia dụng loại 4,Gia dụng,3880000
+P045,Gia dụng loại 5,Gia dụng,110000
+P046,Gia dụng loại 6,Gia dụng,3880000
+P047,Gia dụng loại 7,Gia dụng,4110000
+P048,Gia dụng loại 8,Gia dụng,2410000
+P049,Gia dụng loại 9,Gia dụng,330000
+P050,Gia dụng loại 10,Gia dụng,2180000
+P051,Sách loại 1,Sách,4870000
+P052,Sách loại 2,Sách,3310000
+P053,Sách loại 3,Sách,1460000
+P054,Sách loại 4,Sách,2030000
+P055,Sách loại 5,Sách,2730000
+P056,Sách loại 6,Sách,1250000
+P057,Sách loại 7,Sách,2110000
+P058,Sách loại 8,Sách,320000
+P059,Sách loại 9,Sách,930000
+P060,Sách loại 10,Sách,1070000
+P061,Thể thao loại 1,Thể thao,2760000
+P062,Thể thao loại 2,Thể thao,3600000
+P063,Thể thao loại 3,Thể thao,1990000
+P064,Thể thao loại 4,Thể thao,190000
+P065,Thể thao loại 5,Thể thao,4080000
+P066,Thể thao loại 6,Thể thao,3850000
+P067,Thể thao loại 7,Thể thao,3380000
+P068,Thể thao loại 8,Thể thao,3750000
+P069,Thể thao loại 9,Thể thao,930000
+P070,Thể thao loại 10,Thể thao,3600000
+P071,Mỹ phẩm loại 1,Mỹ phẩm,1930000
+P072,Mỹ phẩm loại 2,Mỹ phẩm,3620000
+P073,Mỹ phẩm loại 3,Mỹ phẩm,2790000
+P074,Mỹ phẩm loại 4,Mỹ phẩm,4110000
+P075,Mỹ phẩm loại 5,Mỹ phẩm,4740000
+P076,Mỹ phẩm loại 6,Mỹ phẩm,2960000
+P077,Mỹ phẩm loại 7,Mỹ phẩm,4190000
+P078,Mỹ phẩm loại 8,Mỹ phẩm,1780000
+P079,Mỹ phẩm loại 9,Mỹ phẩm,4060000
+P080,Mỹ phẩm loại 10,Mỹ phẩm,2240000
+P081,Đồ chơi loại 1,Đồ chơi,1510000
+P082,Đồ chơi loại 2,Đồ chơi,3740000
+P083,Đồ chơi loại 3,Đồ chơi,2600000
+P084,Đồ chơi loại 4,Đồ chơi,1740000
+P085,Đồ chơi loại 5,Đồ chơi,4230000
+P086,Đồ chơi loại 6,Đồ chơi,2270000
+P087,Đồ chơi loại 7,Đồ chơi,4190000
+P088,Đồ chơi loại 8,Đồ chơi,4100000
+P089,Đồ chơi loại 9,Đồ chơi,330000
+P090,Đồ chơi loại 10,Đồ chơi,1830000
+P091,Nội thất loại 1,Nội thất,890000
+P092,Nội thất loại 2,Nội thất,2120000
+P093,Nội thất loại 3,Nội thất,2210000
+P094,Nội thất loại 4,Nội thất,4440000
+P095,Nội thất loại 5,Nội thất,1910000
+P096,Nội thất loại 6,Nội thất,2250000
+P097,Nội thất loại 7,Nội thất,660000
+P098,Nội thất loại 8,Nội thất,2580000
+P099,Nội thất loại 9,Nội thất,4730000
+P100,Nội thất loại 10,Nội thất,1220000
