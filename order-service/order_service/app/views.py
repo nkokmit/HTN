@@ -4,7 +4,7 @@ from rest_framework import status
 import requests
 from decimal import Decimal
 from .models import Order, OrderItem
-from .serializers import OrderSerializer
+from .serializers import OrderCreateSerializer, OrderSerializer
 
 PAY_SERVICE_URL = 'http://pay-service:8000'
 SHIP_SERVICE_URL = 'http://ship-service:8000'
@@ -20,40 +20,55 @@ class OrderListCreate(APIView):
         return Response(serializer.data)
 
     def post(self, request):
-        serializer = OrderSerializer(data=request.data)
+        serializer = OrderCreateSerializer(data=request.data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        order = serializer.save()
+        data = serializer.validated_data
 
-        order_items = request.data.get('order_items', [])
-        if isinstance(order_items, list):
-            for item in order_items:
-                try:
-                    product_id = item.get('product_id')
-                    product_type = item.get('product_type', 'BOOK')
+        order = Order.objects.create(
+            customer_id=data['customer_id'],
+            status=data.get('status', 'CREATED'),
+            total_amount=data['total_amount'],
+            pay_method=data.get('pay_method', 'COD'),
+            ship_method=data.get('ship_method', 'STANDARD'),
+            shipping_address=data['shipping_address'],
+            shipping_phone=data['shipping_phone'],
+            shipping_city=data['shipping_city'],
+            note=data.get('note', '') or '',
+        )
 
-                    if product_id is None:
-                        continue
-
-                    OrderItem.objects.create(
-                        order=order,
-                        product_id=int(product_id),
-                        product_type=product_type,
-                        title=item.get('title', ''),
-                        unit_price=Decimal(str(item.get('unit_price', 0))),
-                        quantity=int(item.get('quantity', 1)),
-                    )
-                except Exception:
+        order_items = serializer.get_order_items(data)
+        for item in order_items:
+            try:
+                product_id = item.get('product_id')
+                if product_id is None:
                     continue
+
+                quantity = int(item.get('quantity', 1))
+                unit_price = Decimal(str(item.get('unit_price', 0)))
+                product_type = item.get('product_type', 'BOOK')
+
+                OrderItem.objects.create(
+                    order=order,
+                    product_id=int(product_id),
+                    product_type=product_type,
+                    title=item.get('title', ''),
+                    quantity=quantity,
+                    unit_price=unit_price,
+                    subtotal=unit_price * Decimal(str(quantity)),
+                )
+            except Exception:
+                continue
 
         payment_payload = {
             'order_id': order.id,
-            'method': order.pay_method,
+            'method': data.get('pay_method', 'COD'),
             'amount': str(order.total_amount),
         }
         shipment_payload = {
             'order_id': order.id,
-            'method': order.ship_method,
+            'method': data.get('ship_method', 'STANDARD'),
+            'address': data['shipping_address'],
         }
 
         try:

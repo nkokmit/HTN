@@ -10,6 +10,7 @@ class UserRole(models.TextChoices):
 class UserAccount(models.Model):
     name = models.CharField(max_length=255)
     email = models.EmailField(unique=True)
+    phone = models.CharField(max_length=20, blank=True, null=True)
     password = models.CharField(max_length=255)
     role = models.CharField(max_length=20, choices=UserRole.choices, default=UserRole.CUSTOMER)
 

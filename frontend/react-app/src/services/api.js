@@ -1,6 +1,7 @@
 const API_ORIGIN = import.meta.env.VITE_API_ORIGIN || ''
 const CART_API_ORIGIN = import.meta.env.VITE_CART_API_ORIGIN || API_ORIGIN
 const USER_API_ORIGIN = import.meta.env.VITE_USER_API_ORIGIN || API_ORIGIN
+const GATEWAY_API_ORIGIN = import.meta.env.VITE_GATEWAY_API_ORIGIN || API_ORIGIN.replace(/\/product$/, '')
 
 export async function request(path, opts = {}, origin = API_ORIGIN){
   const url = origin + path
@@ -29,4 +30,8 @@ export function getUserApiOrigin(){
   return USER_API_ORIGIN
 }
 
-export default { request, getApiOrigin, getCartApiOrigin, getUserApiOrigin }
+export function getGatewayApiOrigin(){
+  return GATEWAY_API_ORIGIN
+}
+
+export default { request, getApiOrigin, getCartApiOrigin, getUserApiOrigin, getGatewayApiOrigin }

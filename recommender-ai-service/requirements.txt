@@ -2,3 +2,6 @@ Django>=5.2,<6
 djangorestframework>=3.15,<4
 psycopg2-binary>=2.9,<3
 requests>=2.31,<3
+neo4j>=5.0.0
+langchain-community>=0.0.20
+langchain-openai>=0.0.6  # Hoặc langchain-google-genai tùy thuộc vào LLM bạn chọn

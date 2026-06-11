@@ -25,12 +25,14 @@ from app.views import (
     StaffBookManageDetailView,
     StaffBookManageView,
     UsersListCreate,
+    UserDetailUpdateView,
 )
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('health/', HealthView.as_view()),
     path('users/', UsersListCreate.as_view()),
+    path('users/<int:user_id>/', UserDetailUpdateView.as_view()),
     path('customers/', CustomerListCreate.as_view()),
     path('auth/register/', RegisterView.as_view()),
     path('auth/login/', LoginView.as_view()),
