@@ -224,8 +224,9 @@ export default function ProfileOrdersPage(){
                     <h3>Đơn #{order.id}</h3>
                     <span className={`order-badge is-${orderMeta.tone}`}>{orderMeta.label}</span>
                   </div>
+                  {/* Sử dụng mẹo mượn ngày tạo của shipment nếu Order model chưa lưu created_at */}
                   <p className="order-card-subtitle">
-                    Đặt lúc {formatDateTime(order.created_at || order.updated_at)}
+                    Đặt lúc {formatDateTime(order.created_at || order.updated_at || order.shipment?.created_at)}
                   </p>
                 </div>
 
@@ -292,9 +293,16 @@ export default function ProfileOrdersPage(){
 
                 <div className="order-fulfillment-panel">
                   <div className="order-panel-head">
-                    <h4>Ghi chú giao hàng</h4>
-                    <span>{shipmentMeta.label}</span>
+                    <h4>Thông tin nhận hàng</h4>
                   </div>
+                  
+                  {/* BỔ SUNG KHỐI HIỂN THỊ ĐỊA CHỈ & SĐT */}
+                  <div style={{ backgroundColor: '#f9fafb', padding: '12px', borderRadius: '8px', marginBottom: '16px', fontSize: '0.9rem', color: '#374151', border: '1px solid #e5e7eb' }}>
+                    <div style={{ marginBottom: '6px' }}><strong>SĐT:</strong> {order.shipping_phone || 'Chưa cập nhật'}</div>
+                    <div style={{ marginBottom: '6px' }}><strong>Địa chỉ:</strong> {order.shipping_address || '---'}, {order.shipping_city || '---'}</div>
+                    {order.note && <div><strong>Ghi chú:</strong> {order.note}</div>}
+                  </div>
+
                   <div className="order-fulfillment-list">
                     {PROGRESS_STEPS.map((step, index) => (
                       <div key={step.key} className={`order-fulfillment-item ${progressStep >= index + 1 ? 'is-active' : ''}`}>
@@ -303,7 +311,7 @@ export default function ProfileOrdersPage(){
                       </div>
                     ))}
                   </div>
-                  <p className="order-muted">
+                  <p className="order-muted" style={{ marginTop: '12px' }}>
                     Nếu đơn đã tạo shipment nhưng chưa có tracking number, trạng thái vận chuyển sẽ cập nhật sau khi ship-service hoàn tất.
                   </p>
                 </div>

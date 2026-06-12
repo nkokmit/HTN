@@ -1,9 +1,6 @@
 from decimal import Decimal
-
 from rest_framework import serializers
-
 from .models import Order, OrderItem
-
 
 class OrderItemSerializer(serializers.ModelSerializer):
     subtotal = serializers.SerializerMethodField()
@@ -15,26 +12,15 @@ class OrderItemSerializer(serializers.ModelSerializer):
     def get_subtotal(self, obj):
         return obj.subtotal
 
-
 class OrderSerializer(serializers.ModelSerializer):
     items = OrderItemSerializer(many=True, read_only=True)
 
     class Meta:
         model = Order
         fields = [
-            'id',
-            'customer_id',
-            'total_amount',
-            'pay_method',
-            'ship_method',
-            'status',
-            'shipping_address',
-            'shipping_phone',
-            'shipping_city',
-            'note',
-            'items',
+            'id', 'customer_id', 'total_amount', 'pay_method', 'ship_method', 'status',
+            'shipping_address', 'shipping_phone', 'shipping_city', 'note', 'items',
         ]
-
 
 class OrderCreateSerializer(serializers.Serializer):
     ALLOWED_PAY_METHODS = {"COD", "CARD", "BANK"}
@@ -54,7 +40,10 @@ class OrderCreateSerializer(serializers.Serializer):
     unit_price = serializers.DecimalField(max_digits=12, decimal_places=2, required=False)
     product_type = serializers.CharField(required=False, default='BOOK')
     title = serializers.CharField(required=False, allow_blank=True, default='')
+    
+    # Hỗ trợ cả 2 chuẩn naming để không bị lỗi 400 Bad Request
     order_items = serializers.ListField(child=serializers.DictField(), required=False)
+    items = serializers.ListField(child=serializers.DictField(), required=False)
 
     def validate_pay_method(self, value):
         normalized = str(value).upper()
@@ -69,12 +58,13 @@ class OrderCreateSerializer(serializers.Serializer):
         return normalized
 
     def validate(self, attrs):
-        order_items = attrs.get('order_items') or []
-        if order_items:
+        # Lấy từ mảng nào cũng được
+        items_list = attrs.get('order_items') or attrs.get('items') or []
+        if items_list:
             return attrs
 
         if attrs.get('product_id') is None:
-            raise serializers.ValidationError({'product_id': 'product_id is required when order_items is not provided'})
+            raise serializers.ValidationError({'product_id': 'product_id is required when items list is not provided'})
 
         if attrs.get('unit_price') is None:
             raise serializers.ValidationError({'unit_price': 'unit_price is required when product_id is provided'})
@@ -82,9 +72,9 @@ class OrderCreateSerializer(serializers.Serializer):
         return attrs
 
     def get_order_items(self, validated_data):
-        order_items = validated_data.get('order_items') or []
-        if order_items:
-            return order_items
+        items_list = validated_data.get('order_items') or validated_data.get('items') or []
+        if items_list:
+            return items_list
 
         return [{
             'product_id': validated_data['product_id'],

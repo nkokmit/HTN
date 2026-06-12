@@ -9,6 +9,12 @@ from .serializers import OrderCreateSerializer, OrderSerializer
 PAY_SERVICE_URL = 'http://pay-service:8000'
 SHIP_SERVICE_URL = 'http://ship-service:8000'
 
+def _safe_json_parse(response):
+    """Hàm bọc an toàn để tránh sập server nếu service khác trả về HTML thay vì JSON"""
+    try:
+        return response.json() if response.content else {}
+    except Exception:
+        return {"error": "Invalid JSON returned from service", "status": response.status_code}
 
 class OrderListCreate(APIView):
     def get(self, request):
@@ -57,7 +63,8 @@ class OrderListCreate(APIView):
                     unit_price=unit_price,
                     subtotal=unit_price * Decimal(str(quantity)),
                 )
-            except Exception:
+            except Exception as e:
+                print(f"Error creating order item: {e}")
                 continue
 
         payment_payload = {
@@ -88,15 +95,15 @@ class OrderListCreate(APIView):
             order.status = 'PARTIAL_FAILED'
         order.save()
 
+        # Áp dụng hàm _safe_json_parse ở đây
         return Response(
             {
                 'order': OrderSerializer(order).data,
-                'payment': pay_resp.json() if pay_resp.content else {},
-                'shipment': ship_resp.json() if ship_resp.content else {},
+                'payment': _safe_json_parse(pay_resp),
+                'shipment': _safe_json_parse(ship_resp),
             },
             status=status.HTTP_201_CREATED,
         )
-
 
 class OrderDetail(APIView):
     def get(self, request, order_id):
@@ -105,7 +112,6 @@ class OrderDetail(APIView):
         except Order.DoesNotExist:
             return Response({'error': 'Order not found'}, status=status.HTTP_404_NOT_FOUND)
         return Response(OrderSerializer(order).data)
-
 
 class HealthView(APIView):
     def get(self, request):

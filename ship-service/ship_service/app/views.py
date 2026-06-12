@@ -43,16 +43,17 @@ class ShipmentStatusView(APIView):
     GET /shipments/order/<order_id>/ - Get status by order ID
     """
     def get(self, request, order_id):
-        try:
-            shipment = Shipment.objects.get(order_id=order_id)
+        # Đã đổi -created_at thành -id để tránh lỗi sập database
+        shipment = Shipment.objects.filter(order_id=order_id).order_by('-id').first()
+        
+        if shipment:
             serializer = ShipmentSerializer(shipment)
             return Response(serializer.data, status=status.HTTP_200_OK)
-        except Shipment.DoesNotExist:
-            return Response(
-                {'detail': f'Shipment for order {order_id} not found'},
-                status=status.HTTP_404_NOT_FOUND
-            )
-
+            
+        return Response(
+            {'detail': f'Shipment for order {order_id} not found'},
+            status=status.HTTP_404_NOT_FOUND
+        )
 
 class HealthView(APIView):
     def get(self, request):

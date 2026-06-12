@@ -1,8 +1,8 @@
 // Cập nhật lại file: frontend/react-app/src/pages/Cart.jsx
 import React, { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import api, { getCartApiOrigin, getApiOrigin, getGatewayApiOrigin } from '../services/api'
-import { useAuth } from '../context/AuthContext' // Sử dụng chính xác useAuth được export
+import api, { getCartApiOrigin, getApiOrigin, getGatewayApiOrigin, getUserApiOrigin } from '../services/api'
+import { useAuth } from '../context/AuthContext' 
 
 function formatMoney(value){
   const num = Number(value)
@@ -12,7 +12,7 @@ function formatMoney(value){
 
 export default function Cart(){
   const navigate = useNavigate()
-  const { ready, isAuthenticated, user } = useAuth() // Trích xuất thông tin user từ hook
+  const { ready, isAuthenticated, user } = useAuth() 
   const [cart, setCart] = useState(null)
   const [items, setItems] = useState([])
   const [productMap, setProductMap] = useState({})
@@ -114,26 +114,48 @@ export default function Cart(){
     }
   }
 
-  // CHỨC NĂNG CHÍNH: Mở form thanh toán, đồng thời tự động lấy thông tin từ profile và điền sẵn (Autofill)
+  // Mở form thanh toán và lấy thông tin User Profile + Profile Address để điền tự động
   async function openCheckout(){
     setCheckoutState({ loading: true, message: 'Đang chuẩn bị thông tin giao hàng...' })
     setCheckoutOpen(true)
 
-    // Giá trị dự phòng ban đầu lấy trực tiếp từ Tài khoản (Account)
     let autofillPhone = user?.phone || ''
     let autofillCity = ''
     let autofillAddress = ''
 
     try {
-      // Gọi API đến user-service hoặc qua gateway để lấy thông tin địa chỉ đã lưu trong profile address
-      const profileAddress = await api.request('/users/profile/address/', {}, getGatewayApiOrigin())
-      if (profileAddress) {
-        if (profileAddress.phone) autofillPhone = profileAddress.phone
-        if (profileAddress.city) autofillCity = profileAddress.city
-        if (profileAddress.address) autofillAddress = profileAddress.address
+      // 1. Lấy sđt từ tài khoản gốc (ProfileAccount) đề phòng chưa có địa chỉ
+      try {
+        const userProfile = await api.request(`/users/${user.id}/`, {}, getUserApiOrigin())
+        if (userProfile && userProfile.phone) {
+          autofillPhone = userProfile.phone
+        }
+      } catch (err) {
+        console.warn("Không tải được chi tiết tài khoản, sử dụng context.", err)
+      }
+
+      // 2. Lấy danh sách địa chỉ (ProfileAddress)
+      const addresses = await api.request('/addresses/', {}, getUserApiOrigin())
+      
+      if (Array.isArray(addresses) && addresses.length > 0) {
+        // Ưu tiên địa chỉ được set là mặc định, nếu không lấy cái đầu tiên
+        const defaultAddress = addresses.find(addr => addr.is_default) || addresses[0]
+        
+        if (defaultAddress.phone_number) autofillPhone = defaultAddress.phone_number
+        if (defaultAddress.city) autofillCity = defaultAddress.city
+        
+        // Lắp ráp chuỗi địa chỉ
+        const addressParts = []
+        if (defaultAddress.detail_address) addressParts.push(defaultAddress.detail_address)
+        if (defaultAddress.ward) addressParts.push(defaultAddress.ward)
+        if (defaultAddress.district) addressParts.push(defaultAddress.district)
+        
+        if (addressParts.length > 0) {
+          autofillAddress = addressParts.join(', ')
+        }
       }
     } catch (e) {
-      console.warn("Không tìm thấy cấu hình địa chỉ mặc định trong profile, sử dụng thông tin tài khoản cơ bản.", e)
+      console.warn("Không tìm thấy cấu hình địa chỉ, sẽ yêu cầu nhập tay.", e)
     }
 
     // Gán thông tin tìm được vào form (Người dùng vẫn có thể sửa lại nếu muốn)

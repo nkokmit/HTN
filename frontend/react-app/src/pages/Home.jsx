@@ -1,42 +1,36 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import CategoryCard from '../components/home/CategoryCard'
-import ProductCard from '../components/home/ProductCard'
+import { Link, useNavigate } from 'react-router-dom'
 import api from '../services/api'
+import ProductCard from '../components/home/ProductCard'
 
-const staticCategories = [
-  { icon: '📱', title: 'Điện tử', description: 'Săn deal chính hãng' },
-  { icon: '👕', title: 'Thời trang', description: 'Phong cách mỗi ngày' },
-  { icon: '🏠', title: 'Gia dụng', description: 'Nhà cửa gọn đẹp' },
-  { icon: '📚', title: 'Sách', description: 'Đọc là biết ngay' },
-  { icon: '🎮', title: 'Giải trí', description: 'Phụ kiện & gaming' },
-  { icon: '🍎', title: 'Sức khỏe', description: 'Tiện lợi cho gia đình' }
-]
-
-export default function Home(){
-  const [categories, setCategories] = useState(staticCategories)
+export default function Home() {
+  const [categories, setCategories] = useState([{ icon: '✨', title: 'Tất cả', description: 'Xem toàn bộ sản phẩm' }])
   const [products, setProducts] = useState([])
   const [selectedCategory, setSelectedCategory] = useState('all')
-  const [searchTerm, setSearchTerm] = useState('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const navigate = useNavigate()
+  
+  // State cho thanh Live Search
+  const [searchQuery, setSearchQuery] = useState('')
+  const [showSuggestions, setShowSuggestions] = useState(false)
 
-  useEffect(()=>{
+  useEffect(() => {
     let mounted = true
-    async function load(){
+    async function load() {
       setLoading(true)
-      try{
-        // Use product-service paths; gateway is proxied under /product when using API gateway
+      try {
+        // Dùng đúng đường dẫn nguyên bản của bạn
         const pResult = await api.request('/products')
-        if(!mounted) return
+        if (!mounted) return
         const prodList = Array.isArray(pResult) ? pResult : (pResult.results || pResult.data || [])
 
-        const normalizedProducts = prodList.map((p)=>({
+        // 1. GIỮ NGUYÊN LOGIC CHUẨN HÓA DỮ LIỆU CỦA BẠN
+        const normalizedProducts = prodList.map((p) => ({
           id: p.id,
           icon: p.icon || '📦',
           title: p.title || p.name || p.description || 'Sản phẩm',
-          price: p.price_display || (p.price ? `${p.price}đ` : '—'),
+          price: p.price_display || (p.price ? `${Math.round(Number(p.price))}đ` : '—'),
           sold: p.sold || p.sold_count || '—',
           badge: p.badge || '',
           category: p.category_detail?.name || '',
@@ -46,9 +40,9 @@ export default function Home(){
           productType: p.product_type || '',
           raw: p,
         }))
-
         setProducts(normalizedProducts)
 
+        // 2. GIỮ NGUYÊN LOGIC LỌC DANH MỤC CỦA BẠN
         const derivedCategories = Array.from(
           new Map(
             prodList
@@ -58,8 +52,8 @@ export default function Home(){
           ).values()
         )
 
-        if(derivedCategories.length){
-          const mappedCategories = derivedCategories.map((c)=>({
+        if (derivedCategories.length) {
+          const mappedCategories = derivedCategories.map((c) => ({
             icon: c.icon || '▣',
             title: c.name || c.title,
             description: c.description || ''
@@ -69,142 +63,130 @@ export default function Home(){
             ...mappedCategories,
           ])
         }
-      }catch(err){
+      } catch (err) {
         console.warn('Failed to load products/categories', err)
         setError(err.message || String(err))
-      }finally{
-        if(mounted) setLoading(false)
+      } finally {
+        if (mounted) setLoading(false)
       }
     }
     load()
-    return ()=>{ mounted=false }
-  },[])
+    return () => { mounted = false }
+  }, [])
 
+  // Dữ liệu cho ô Dropdown tìm kiếm thông minh
+  const liveResults = useMemo(() => {
+    if (!searchQuery.trim()) return []
+    const normalizedTerm = searchQuery.trim().toLowerCase()
+    return products
+      .filter(product => {
+        return [product.title, product.category, product.description, product.productType]
+          .filter(Boolean)
+          .some((value) => String(value).toLowerCase().includes(normalizedTerm))
+      })
+      .slice(0, 5) 
+  }, [searchQuery, products])
+
+  // Lọc sản phẩm hiển thị trên lưới theo Danh mục chọn ở cột trái
   const filteredProducts = useMemo(() => {
-    const normalizedTerm = searchTerm.trim().toLowerCase()
     return products.filter((product) => {
-      const matchesCategory = selectedCategory === 'all' || product.category === selectedCategory
-      const matchesSearch = !normalizedTerm || [product.title, product.category, product.description, product.productType]
-        .filter(Boolean)
-        .some((value) => String(value).toLowerCase().includes(normalizedTerm))
-      return matchesCategory && matchesSearch
+      return selectedCategory === 'all' || product.category === selectedCategory
     })
-  }, [products, selectedCategory, searchTerm])
+  }, [products, selectedCategory])
+
+  if (loading) {
+    return <div className="page-wrap"><div className="section-card" style={{padding: 24}}>Đang tải trang chủ...</div></div>
+  }
 
   return (
-    <div className="page-wrap">
-      <section className="hero-grid">
-        <div className="hero-card">
-          <span className="hero-kicker">Marketplace / Tiki-style layout</span>
-          <h1 className="hero-title">Một mặt tiền mua sắm rõ ràng hơn, nhiều danh mục hơn, và vẫn dễ mở rộng tiếp</h1>
-          <p className="hero-copy">Giao diện này giờ kết nối tới backend để lấy danh sách sản phẩm và danh mục.</p>
-          <div className="hero-search-inline">
-            <input
-              className="hero-search-input"
-              value={searchTerm}
-              onChange={(event) => setSearchTerm(event.target.value)}
-              placeholder="Tìm theo tên, mô tả, danh mục..."
-              aria-label="Tìm kiếm sản phẩm"
-            />
-            <button className="btn btn-secondary" type="button" onClick={() => setSearchTerm('')}>
-              Xóa tìm kiếm
-            </button>
-          </div>
-          <div className="hero-actions">
-            <button className="btn btn-primary">Khám phá deal hôm nay</button>
-            <button className="btn btn-secondary">Xem danh mục nổi bật</button>
-          </div>
-          <div className="hero-stats">
-            <div className="metric"><strong>{products.length || '—'}</strong><span>sản phẩm tải được</span></div>
-            <div className="metric"><strong>2h</strong><span>giao nhanh nội thành</span></div>
-            <div className="metric"><strong>98%</strong><span>đánh giá hài lòng</span></div>
-          </div>
-        </div>
+    <div className="page-wrap home-container">
+      
+      {/* 1. CỘT TRÁI: DANH MỤC */}
+      <aside className="home-sidebar-left section-card">
+        <h3 className="sidebar-title">Danh mục</h3>
+        <ul className="category-menu">
+          {categories.map((item, idx) => {
+            const catValue = item.title === 'Tất cả' ? 'all' : item.title
+            const isActive = selectedCategory === catValue
+            return (
+              <li key={idx} className={isActive ? 'active' : ''}>
+                <a 
+                  href="#!" 
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setSelectedCategory(catValue);
+                  }}
+                >
+                  <span style={{marginRight: 8}}>{item.icon}</span>
+                  {item.title}
+                </a>
+              </li>
+            )
+          })}
+        </ul>
+      </aside>
 
-        <aside className="side-card">
-          <div className="mini-banner orange">
-            <div>
-              <strong>Giảm đến 50%</strong>
-              <h3>Thiết bị công nghệ & phụ kiện</h3>
+      {/* 2. CỘT GIỮA: TÌM KIẾM + SẢN PHẨM */}
+      <main className="home-main-content">
+        
+        {/* Ô tìm kiếm Live Search */}
+        <div className="live-search-wrapper">
+          <input 
+            type="text" 
+            className="live-search-input"
+            placeholder="Tìm theo tên, mô tả, danh mục..." 
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onFocus={() => setShowSuggestions(true)}
+            onBlur={() => setTimeout(() => setShowSuggestions(false), 200)} 
+          />
+          
+          {showSuggestions && searchQuery && (
+            <div className="search-dropdown-overlay">
+              {liveResults.length > 0 ? (
+                liveResults.map(p => (
+                  <Link key={p.id} to={`/products/${p.id}`} className="search-result-item">
+                    <div className="search-result-icon">{p.icon}</div>
+                    <div className="search-result-info">
+                      <h4>{p.title}</h4>
+                      <span>{p.price}</span>
+                    </div>
+                  </Link>
+                ))
+              ) : (
+                <div className="search-no-result">Không tìm thấy "{searchQuery}"</div>
+              )}
             </div>
-            <p>Flash sale giới hạn cho nhóm hàng bán chạy nhất.</p>
-          </div>
-          <div className="mini-banner blue">
-            <div>
-              <strong>Miễn phí ship</strong>
-              <h3>Đơn từ 149k, áp dụng hàng nghìn shop</h3>
-            </div>
-            <p>Tăng chuyển đổi với các ưu đãi rõ ràng, dễ nhìn.</p>
-          </div>
-        </aside>
-      </section>
-
-      <section className="section-card">
-        <div className="section-head">
-          <div>
-            <h2>Danh mục nổi bật</h2>
-            <p>Gợi ý cách bố cục như giao diện marketplace lớn: dễ scan, dễ click.</p>
-          </div>
-          <a className="see-more" href="#products">Xem tất cả</a>
-        </div>
-        <div className="category-row">
-          {categories.map((item) => (
-            <CategoryCard
-              key={item.title}
-              {...item}
-              active={selectedCategory === (item.title === 'Tất cả' ? 'all' : item.title)}
-              onClick={() => setSelectedCategory(item.title === 'Tất cả' ? 'all' : item.title)}
-            />
-          ))}
-        </div>
-      </section>
-
-      <section className="promo-card">
-        <div>
-          <span className="hero-kicker" style={{background:'rgba(255,255,255,.16)',color:'#fff'}}>Deal hot</span>
-          <h3>Mua sắm theo chiến dịch, không chỉ theo danh sách sản phẩm</h3>
-          <p>
-            Khối promo lớn tạo điểm nhấn kiểu Tiki: vừa có ưu đãi, vừa có cảm giác “chợ” mạnh hơn,
-            phù hợp để phát triển tiếp các trang home, campaign và landing page sau này.
-          </p>
-          <div className="promo-points">
-            <span className="promo-point">Ưu đãi theo ngày</span>
-            <span className="promo-point">Gợi ý theo hành vi</span>
-            <span className="promo-point">Bộ lọc nhanh</span>
-            <span className="promo-point">Bán chạy theo trend</span>
-          </div>
-        </div>
-        <div className="promo-art">🛍️</div>
-      </section>
-
-      <section className="section-card" id="products">
-        <div className="section-head">
-          <div>
-            <h2>Sản phẩm bán chạy</h2>
-            <p>
-              Grid 4 cột trên desktop, tự co về mobile. {selectedCategory !== 'all' ? `Đang lọc theo ${selectedCategory}.` : 'Đang xem toàn bộ danh mục.'}
-            </p>
-          </div>
-          <a className="see-more" href="/profile">Vào tài khoản</a>
+          )}
         </div>
 
-        {loading ? (
-          <div style={{padding:24}}>Đang tải sản phẩm...</div>
-        ) : error ? (
-          <div style={{padding:24,color:'crimson'}}>Lỗi khi tải dữ liệu: {error}. Hiện đang hiển thị dữ liệu mẫu.</div>
+        {/* Lưới sản phẩm đã trả lại cấu trúc props nguyên bản */}
+        {error ? (
+          <div style={{color:'crimson', padding: 20}}>Lỗi khi tải dữ liệu: {error}</div>
         ) : (
-          <div className="deal-grid">
-            {filteredProducts.length ? filteredProducts.map((item)=> (
-              <ProductCard
-                key={item.id}
-                {...item}
-                onClick={() => navigate(`/products/${item.id}`)}
-              />
-            )) : <div>Không có sản phẩm nào trong danh mục này.</div>}
+          <div className="home-product-grid">
+            {filteredProducts.length > 0 ? (
+              filteredProducts.map(item => (
+                <ProductCard 
+                  key={item.id} 
+                  {...item} 
+                  onClick={() => navigate(`/products/${item.id}`)} 
+                />
+              ))
+            ) : (
+              <div style={{padding: 20, color: '#6b7280'}}>Không có sản phẩm nào trong danh mục này.</div>
+            )}
           </div>
         )}
+      </main>
 
-      </section>
+      {/* 3. CỘT PHẢI: BANNERS QUẢNG CÁO */}
+      <aside className="home-sidebar-right">
+        <div className="side-banner banner-1"><span>🔥 Siêu Sale Hè</span></div>
+        <div className="side-banner banner-2"><span>🚚 Freeship Từ 149k</span></div>
+        <div className="side-banner banner-3"><span>🎁 Quà Tặng 199k</span></div>
+      </aside>
+      
     </div>
   )
 }

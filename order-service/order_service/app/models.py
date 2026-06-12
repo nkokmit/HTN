@@ -10,8 +10,8 @@ class Order(models.Model):
     status = models.CharField(max_length=50, default='CREATED')
     # double trong database được map chính xác nhất qua DecimalField trong Django để tránh sai số tiền tệ
     shipping_address = models.TextField(default='')
-    shipping_phone = models.CharField(max_length=10, default='')
-    shipping_city = models.CharField(max_length=20, default='')
+    shipping_phone = models.CharField(max_length=20, default='')
+    shipping_city = models.CharField(max_length=100, default='')
     note = models.TextField(blank=True, null=True, default='')
 
 

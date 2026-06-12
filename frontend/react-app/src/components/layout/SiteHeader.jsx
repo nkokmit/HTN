@@ -41,11 +41,6 @@ export default function SiteHeader(){
           </div>
         </Link>
 
-        <label className="searchbox" aria-label="Search products">
-          <span>🔎</span>
-          <input placeholder="Tìm sản phẩm, thương hiệu, danh mục..." />
-          <span className="pill">Deal hôm nay</span>
-        </label>
 
         <div className="top-actions">
           <Link className="action-chip" to={isAuthenticated ? '/profile' : '/login'}>

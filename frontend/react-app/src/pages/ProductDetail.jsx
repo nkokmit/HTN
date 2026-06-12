@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import api, { getCartApiOrigin, getGatewayApiOrigin } from '../services/api'
+import api, { getCartApiOrigin, getGatewayApiOrigin, getUserApiOrigin } from '../services/api'
 import { useAuth } from '../context/AuthContext'
 
 function formatCurrency(value){
@@ -81,23 +81,65 @@ export default function ProductDetail(){
     }
   }
 
-  function openBuyNow(){
+  // Hàm mở popup Mua ngay và tự động điền thông tin địa chỉ
+  async function openBuyNow(){
     if(!ready || !isAuthenticated || !user?.id){
       navigate('/login', { state: { from: { pathname: `/products/${id}` } } })
       return
     }
 
-    setBuyNowState({ loading: false, message: '' })
+    setBuyNowState({ loading: true, message: 'Đang chuẩn bị thông tin giao hàng...' })
+    setBuyNowOpen(true)
+
+    let autofillPhone = user?.phone || ''
+    let autofillCity = ''
+    let autofillAddress = ''
+
+    try {
+      // 1. Lấy số điện thoại từ tài khoản cá nhân (đề phòng chưa có địa chỉ)
+      try {
+        const userProfile = await api.request(`/users/${user.id}/`, {}, getUserApiOrigin())
+        if (userProfile && userProfile.phone) {
+          autofillPhone = userProfile.phone
+        }
+      } catch (err) {
+        console.warn("Không tải được chi tiết tài khoản, sử dụng context.", err)
+      }
+
+      // 2. Lấy danh sách địa chỉ đã lưu
+      const addresses = await api.request('/addresses/', {}, getUserApiOrigin())
+      
+      if (Array.isArray(addresses) && addresses.length > 0) {
+        // Ưu tiên địa chỉ được đánh dấu mặc định (is_default), nếu không có lấy địa chỉ đầu tiên
+        const defaultAddress = addresses.find(addr => addr.is_default) || addresses[0]
+        
+        if (defaultAddress.phone_number) autofillPhone = defaultAddress.phone_number
+        if (defaultAddress.city) autofillCity = defaultAddress.city
+        
+        // Lắp ráp chuỗi địa chỉ chi tiết
+        const addressParts = []
+        if (defaultAddress.detail_address) addressParts.push(defaultAddress.detail_address)
+        if (defaultAddress.ward) addressParts.push(defaultAddress.ward)
+        if (defaultAddress.district) addressParts.push(defaultAddress.district)
+        
+        if (addressParts.length > 0) {
+          autofillAddress = addressParts.join(', ')
+        }
+      }
+    } catch (e) {
+      console.warn("Không tìm thấy cấu hình địa chỉ tự động, sẽ yêu cầu nhập tay.", e)
+    }
+
     setBuyNowForm({
-      shipping_address: '',
-      shipping_phone: user?.phone || '',
-      shipping_city: '',
+      shipping_address: autofillAddress,
+      shipping_phone: autofillPhone,
+      shipping_city: autofillCity,
       note: '',
       quantity: 1,
       pay_method: 'COD',
       ship_method: 'STANDARD',
     })
-    setBuyNowOpen(true)
+    setBuyNowState({ loading: false, message: '' })
   }
 
   function handleBuyNowChange(event){
