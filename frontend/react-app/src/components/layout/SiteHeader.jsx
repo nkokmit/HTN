@@ -26,7 +26,8 @@ export default function SiteHeader(){
     }
 
     loadCount()
-    return () => { mounted = false }
+    return () => { mounted = false 
+      window.removeEventListener('cart-updated', loadCount) }
   }, [location.pathname, ready, isAuthenticated, user?.id])
 
   return (

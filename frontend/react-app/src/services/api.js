@@ -5,7 +5,19 @@ const GATEWAY_API_ORIGIN = import.meta.env.VITE_GATEWAY_API_ORIGIN || API_ORIGIN
 
 export async function request(path, opts = {}, origin = API_ORIGIN){
   const url = origin + path
-  const headers = Object.assign({'Content-Type':'application/json'}, opts.headers || {})
+  
+  // 1. Tự động lấy Token từ localStorage (Đảm bảo key khớp với tên bạn lưu khi đăng nhập thành công)
+  const token = localStorage.getItem('token') || sessionStorage.getItem('token')
+
+  // 2. Thiết lập Header, tự động chèn Authorization nếu có Token
+  const headers = Object.assign(
+    {
+      'Content-Type': 'application/json',
+      ...(token ? { 'Authorization': `Bearer ${token}` } : {}) // Chèn mã Bearer Token để vượt qua lỗi 403
+    }, 
+    opts.headers || {}
+  )
+
   const res = await fetch(url, Object.assign({}, opts, { headers }))
   if(!res.ok){
     const text = await res.text()

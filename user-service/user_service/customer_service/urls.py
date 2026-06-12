@@ -1,21 +1,9 @@
 """
 URL configuration for customer_service project.
-
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/5.2/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  path('', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
-Including another URLconf
-    1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
 from app.views import (
     CustomerListCreate,
     HealthView,
@@ -26,7 +14,12 @@ from app.views import (
     StaffBookManageView,
     UsersListCreate,
     UserDetailUpdateView,
+    UserAddressViewSet, # 1. Import ViewSet địa chỉ vào đây
 )
+
+# 2. Khởi tạo Router để tự động sinh các đường dẫn CRUD cho addresses/
+router = DefaultRouter()
+router.register(r'addresses', UserAddressViewSet, basename='user-address')
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -39,5 +32,7 @@ urlpatterns = [
     path('staff/products/', StaffBookManageView.as_view()),
     path('staff/products/<int:product_id>/', StaffBookManageDetailView.as_view()),
     path('manager/notes/', ManagerNoteListCreate.as_view()),
+    
+    # 3. Nhúng toàn bộ các tuyến đường của router địa chỉ vào urlpatterns
+    path('', include(router.urls)), 
 ]
-

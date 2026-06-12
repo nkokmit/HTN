@@ -75,6 +75,7 @@ export default function ProductDetail(){
         body: JSON.stringify({ cart: cart.id, product_id: product.id, quantity: 1 }),
       }, getCartApiOrigin())
       setCartState({ loading: false, message: 'Đã thêm vào giỏ hàng' })
+      window.dispatchEvent(new Event('cart-updated'))
     }catch(err){
       setCartState({ loading: false, message: err.message || String(err) })
     }

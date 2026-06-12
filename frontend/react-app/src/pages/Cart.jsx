@@ -1,6 +1,7 @@
+// Cập nhật lại file: frontend/react-app/src/pages/Cart.jsx
 import React, { useEffect, useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
-import api, { getCartApiOrigin, getApiOrigin } from '../services/api'
+import { Link, useNavigate } from 'react-router-dom'
+import api, { getCartApiOrigin, getApiOrigin, getGatewayApiOrigin } from '../services/api'
 import { useAuth } from '../context/AuthContext'
 
 function formatMoney(value){
@@ -10,6 +11,7 @@ function formatMoney(value){
 }
 
 export default function Cart(){
+  const navigate = useNavigate()
   const { ready, isAuthenticated, user } = useAuth()
   const [cart, setCart] = useState(null)
   const [items, setItems] = useState([])
@@ -17,6 +19,18 @@ export default function Cart(){
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [updatingId, setUpdatingId] = useState(null)
+
+  // State cho việc hiển thị form thanh toán đơn hàng
+  const [checkoutOpen, setCheckoutOpen] = useState(false)
+  const [checkoutState, setCheckoutState] = useState({ loading: false, message: '' })
+  const [checkoutForm, setCheckoutForm] = useState({
+    shipping_address: '',
+    shipping_phone: '',
+    shipping_city: '',
+    note: '',
+    pay_method: 'COD',
+    ship_method: 'STANDARD',
+  })
 
   useEffect(() => {
     let mounted = true
@@ -96,6 +110,86 @@ export default function Cart(){
       setError(err.message || String(err))
     }finally{
       setUpdatingId(null)
+    }
+  }
+
+  // Mở form thanh toán và điền sẵn số điện thoại user
+  function openCheckout(){
+    setCheckoutForm({
+      shipping_address: '',
+      shipping_phone: user?.phone || '',
+      shipping_city: '',
+      note: '',
+      pay_method: 'COD',
+      ship_method: 'STANDARD',
+    })
+    setCheckoutState({ loading: false, message: '' })
+    setCheckoutOpen(true)
+  }
+
+  function handleCheckoutChange(event){
+    const { name, value } = event.target
+    setCheckoutForm((current) => ({ ...current, [name]: value }))
+  }
+
+  // Gửi thông tin thanh toán đơn hàng từ Giỏ hàng
+  async function submitCheckout(event){
+    event.preventDefault()
+    if(!items.length || !user?.id) return
+
+    const shippingAddress = checkoutForm.shipping_address.trim()
+    const shippingPhone = checkoutForm.shipping_phone.trim()
+    const shippingCity = checkoutForm.shipping_city.trim()
+
+    if(!shippingAddress || !shippingPhone || !shippingCity){
+      setCheckoutState({ loading: false, message: 'Vui lòng điền đầy đủ SĐT, Thành phố và Địa chỉ.' })
+      return
+    }
+
+    setCheckoutState({ loading: true, message: 'Đang tiến hành đặt hàng...' })
+
+    try {
+      // Gọi API Gateway để tạo đơn hàng lớn cho cả giỏ hàng 
+      // (Hệ thống microservices nhận danh sách items hoặc tạo dựa trên item đầu tiên/tổng hợp tùy thuộc spec backend)
+      const createdOrder = await api.request('/order/orders/', {
+        method: 'POST',
+        body: JSON.stringify({
+          customer_id: user.id,
+          total_amount: total.toFixed(2),
+          pay_method: checkoutForm.pay_method,
+          ship_method: checkoutForm.ship_method,
+          shipping_address: shippingAddress,
+          shipping_phone: shippingPhone,
+          shipping_city: shippingCity,
+          note: checkoutForm.note.trim(),
+          // Gửi thông tin các mặt hàng để Backend xử lý
+          items: items.map(item => ({
+            product_id: item.product_id,
+            quantity: item.quantity,
+            unit_price: Number(item.unit_price).toFixed(2),
+            title: productMap[item.product_id]?.name || ''
+          }))
+        }),
+      }, getGatewayApiOrigin())
+
+      // Xóa sạch giỏ hàng cục bộ sau khi đã đặt hàng thành công
+      // (Hoặc backend tự động clear giỏ hàng khi có đơn từ cart)
+      try {
+        await Promise.all(items.map(item => 
+          api.request(`/cart-items/${item.id}/`, { method: 'DELETE' }, getCartApiOrigin())
+        ))
+      } catch(e) {
+        console.error("Lỗi khi clear giỏ hàng:", e)
+      }
+
+      setCheckoutOpen(false)
+      navigate('/profile/orders', {
+        state: {
+          successMessage: `Đã đặt đơn hàng giỏ hàng thành công!`,
+        },
+      })
+    } catch(err) {
+      setCheckoutState({ loading: false, message: err.message || String(err) })
     }
   }
 
@@ -190,7 +284,9 @@ export default function Cart(){
             <div className="summary-row"><span>Phí ship</span><strong>{shipping ? formatMoney(shipping) : 'Miễn phí'}</strong></div>
             <div className="summary-row"><span>Giảm giá</span><strong>- {formatMoney(discount)}</strong></div>
             <div className="summary-total"><span>Tổng cộng</span><strong>{formatMoney(total)}</strong></div>
-            <button className="btn btn-primary cart-checkout" type="button">Tiến hành thanh toán</button>
+            <button className="btn btn-primary cart-checkout" type="button" onClick={openCheckout} disabled={!items.length}>
+              Tiến hành thanh toán
+            </button>
             <div className="summary-note">
               <strong>Ưu đãi hiện tại</strong>
               <p>Đơn từ 149k được miễn ship. Đơn lớn hơn 500k giảm thêm 5%.</p>
@@ -198,6 +294,73 @@ export default function Cart(){
           </aside>
         </div>
       </section>
+
+      {/* Modal form thông tin giao hàng khi nhấn Tiến hành thanh toán từ giỏ */}
+      {checkoutOpen ? (
+        <div className="buy-now-backdrop" role="presentation" onClick={() => setCheckoutOpen(false)}>
+          <div className="buy-now-modal" role="dialog" aria-modal="true" onClick={(event) => event.stopPropagation()}>
+            <div className="buy-now-header">
+              <div>
+                <span className="hero-kicker">Thanh toán</span>
+                <h2>Thông tin giao hàng</h2>
+                <p>Xác nhận địa chỉ để xử lý toàn bộ giỏ hàng của bạn.</p>
+              </div>
+              <button className="buy-now-close" type="button" onClick={() => setCheckoutOpen(false)}>×</button>
+            </div>
+
+            <form className="buy-now-form" onSubmit={submitCheckout}>
+              <div className="buy-now-summary">
+                <div><span>Tổng số món</span><strong>{items.length} món</strong></div>
+                <div><span>Tổng thanh toán</span><strong>{formatMoney(total)}</strong></div>
+              </div>
+
+              <div className="buy-now-grid">
+                <label>
+                  <span>Số điện thoại</span>
+                  <input name="shipping_phone" value={checkoutForm.shipping_phone} onChange={handleCheckoutChange} placeholder="Ví dụ: 0912345678" />
+                </label>
+                <label>
+                  <span>Thành phố</span>
+                  <input name="shipping_city" value={checkoutForm.shipping_city} onChange={handleCheckoutChange} placeholder="Ví dụ: Hà Nội" />
+                </label>
+                <label className="buy-now-full">
+                  <span>Địa chỉ nhận hàng</span>
+                  <input name="shipping_address" value={checkoutForm.shipping_address} onChange={handleCheckoutChange} placeholder="Số nhà, đường, phường/xã..." />
+                </label>
+                <label>
+                  <span>Thanh toán</span>
+                  <select name="pay_method" value={checkoutForm.pay_method} onChange={handleCheckoutChange}>
+                    <option value="COD">COD</option>
+                    <option value="CARD">CARD</option>
+                    <option value="BANK">BANK</option>
+                  </select>
+                </label>
+                <label>
+                  <span>Vận chuyển</span>
+                  <select name="ship_method" value={checkoutForm.ship_method} onChange={handleCheckoutChange}>
+                    <option value="STANDARD">STANDARD</option>
+                    <option value="FAST">FAST</option>
+                    <option value="EXPRESS">EXPRESS</option>
+                  </select>
+                </label>
+                <label className="buy-now-full">
+                  <span>Ghi chú</span>
+                  <textarea name="note" rows="2" value={checkoutForm.note} onChange={handleCheckoutChange} placeholder="Ghi chú thêm cho shipper..." />
+                </label>
+              </div>
+
+              {checkoutState.message ? <p className="detail-feedback">{checkoutState.message}</p> : null}
+
+              <div className="buy-now-actions">
+                <button className="btn btn-secondary" type="button" onClick={() => setCheckoutOpen(false)}>Hủy</button>
+                <button className="btn btn-primary" type="submit" disabled={checkoutState.loading}>
+                  {checkoutState.loading ? 'Đang tạo đơn...' : 'Xác nhận đặt hàng'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      ) : null}
     </div>
   )
 }
