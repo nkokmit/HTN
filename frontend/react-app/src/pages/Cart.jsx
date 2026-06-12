@@ -2,7 +2,7 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import api, { getCartApiOrigin, getApiOrigin, getGatewayApiOrigin } from '../services/api'
-import { useAuth } from '../context/AuthContext'
+import { useAuth } from '../context/AuthContext' // Sử dụng chính xác useAuth được export
 
 function formatMoney(value){
   const num = Number(value)
@@ -12,7 +12,7 @@ function formatMoney(value){
 
 export default function Cart(){
   const navigate = useNavigate()
-  const { ready, isAuthenticated, user } = useAuth()
+  const { ready, isAuthenticated, user } = useAuth() // Trích xuất thông tin user từ hook
   const [cart, setCart] = useState(null)
   const [items, setItems] = useState([])
   const [productMap, setProductMap] = useState({})
@@ -32,6 +32,7 @@ export default function Cart(){
     ship_method: 'STANDARD',
   })
 
+  // Tải thông tin giỏ hàng
   useEffect(() => {
     let mounted = true
 
@@ -113,18 +114,38 @@ export default function Cart(){
     }
   }
 
-  // Mở form thanh toán và điền sẵn số điện thoại user
-  function openCheckout(){
+  // CHỨC NĂNG CHÍNH: Mở form thanh toán, đồng thời tự động lấy thông tin từ profile và điền sẵn (Autofill)
+  async function openCheckout(){
+    setCheckoutState({ loading: true, message: 'Đang chuẩn bị thông tin giao hàng...' })
+    setCheckoutOpen(true)
+
+    // Giá trị dự phòng ban đầu lấy trực tiếp từ Tài khoản (Account)
+    let autofillPhone = user?.phone || ''
+    let autofillCity = ''
+    let autofillAddress = ''
+
+    try {
+      // Gọi API đến user-service hoặc qua gateway để lấy thông tin địa chỉ đã lưu trong profile address
+      const profileAddress = await api.request('/users/profile/address/', {}, getGatewayApiOrigin())
+      if (profileAddress) {
+        if (profileAddress.phone) autofillPhone = profileAddress.phone
+        if (profileAddress.city) autofillCity = profileAddress.city
+        if (profileAddress.address) autofillAddress = profileAddress.address
+      }
+    } catch (e) {
+      console.warn("Không tìm thấy cấu hình địa chỉ mặc định trong profile, sử dụng thông tin tài khoản cơ bản.", e)
+    }
+
+    // Gán thông tin tìm được vào form (Người dùng vẫn có thể sửa lại nếu muốn)
     setCheckoutForm({
-      shipping_address: '',
-      shipping_phone: user?.phone || '',
-      shipping_city: '',
+      shipping_address: autofillAddress,
+      shipping_phone: autofillPhone,
+      shipping_city: autofillCity,
       note: '',
       pay_method: 'COD',
       ship_method: 'STANDARD',
     })
     setCheckoutState({ loading: false, message: '' })
-    setCheckoutOpen(true)
   }
 
   function handleCheckoutChange(event){
@@ -150,7 +171,6 @@ export default function Cart(){
 
     try {
       // Gọi API Gateway để tạo đơn hàng lớn cho cả giỏ hàng 
-      // (Hệ thống microservices nhận danh sách items hoặc tạo dựa trên item đầu tiên/tổng hợp tùy thuộc spec backend)
       const createdOrder = await api.request('/order/orders/', {
         method: 'POST',
         body: JSON.stringify({
@@ -162,7 +182,6 @@ export default function Cart(){
           shipping_phone: shippingPhone,
           shipping_city: shippingCity,
           note: checkoutForm.note.trim(),
-          // Gửi thông tin các mặt hàng để Backend xử lý
           items: items.map(item => ({
             product_id: item.product_id,
             quantity: item.quantity,
@@ -172,8 +191,7 @@ export default function Cart(){
         }),
       }, getGatewayApiOrigin())
 
-      // Xóa sạch giỏ hàng cục bộ sau khi đã đặt hàng thành công
-      // (Hoặc backend tự động clear giỏ hàng khi có đơn từ cart)
+      // Xóa sạch giỏ hàng cục bộ sau khi đặt hàng thành công
       try {
         await Promise.all(items.map(item => 
           api.request(`/cart-items/${item.id}/`, { method: 'DELETE' }, getCartApiOrigin())
@@ -354,7 +372,7 @@ export default function Cart(){
               <div className="buy-now-actions">
                 <button className="btn btn-secondary" type="button" onClick={() => setCheckoutOpen(false)}>Hủy</button>
                 <button className="btn btn-primary" type="submit" disabled={checkoutState.loading}>
-                  {checkoutState.loading ? 'Đang tạo đơn...' : 'Xác nhận đặt hàng'}
+                  {checkoutState.loading ? 'Đang tải...' : 'Xác nhận đặt hàng'}
                 </button>
               </div>
             </form>
